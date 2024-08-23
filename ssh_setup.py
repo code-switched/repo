@@ -1,83 +1,134 @@
 from utils.style import ansi
 from utils.cli import shell
+import getpass
+import socket
 import os
+import re
+import glob
 
 import logging
 from logs.config import log_config
 log_config(__file__)
 
-def display_tips():
-    print(
-    f"""{ansi.cyan}Tips:{ansi.reset}
-    - Generate a new ssh key per machine per account
-    - Use the ed25519 algorithm
-    - Determine the format of the key file name
-        - id_ed25519_<machine>_<account>
-    - Create new ssh key
-    - Add the key to GitHub under Authentication keys and Signing keys
-    - Set up ssh config file (~/.ssh/config) using ssh_config.txt as a reference
-    - Test ssh connection to GitHub
-    """
-    )
+def generate_ssh_key():
+    """Generate a new SSH key"""
+    print("\nGenerating a new SSH key...")
+    account_name = input("Enter your account name (e.g., personal, user_name): ")
+    user = getpass.getuser()
+    hostname = socket.gethostname()
+    user_hostname = f"{user}@{hostname}.local"
+    email = input(f"Enter your email: {ansi.grey}(default: {user_hostname}){ansi.reset}")
+    if not email:
+        email = user_hostname
+    default_machine_name = re.sub(r'[^a-z0-9]', '', socket.gethostname().lower())
+    machine_name = input(f"Enter your machine name (e.g., desktop, laptop): {ansi.grey}(default: {default_machine_name}){ansi.reset}")
+    if not machine_name:
+        machine_name = default_machine_name
+    
+    key_name = f"id_ed25519_{machine_name}_{account_name}"
+    key_path = os.path.expanduser(f"~/.ssh/{key_name}")
+    
+    shell.run(f'ssh-keygen -t ed25519 -f {key_path} -C "{email}" -N ""')
+    logging.info(f"Generated new SSH key: {key_path}")
+    
+    return key_path, account_name, email
 
-def check_ed25519_key():
-    """Verify that an ed25519 key is set up"""
-    print("\nVerifying that your ED25519 exists...")
-    key_path = os.path.expanduser("~/.ssh/id_ed25519")
-    if os.path.exists(key_path):
-        logging.info("ED25519 key found")
-        print(f"{ansi.green}ED25519 key found.{ansi.reset}")
+def update_ssh_config(key_path, account_name, email):
+    """Update SSH config file"""
+    config_path = os.path.expanduser("~/.ssh/config")
+    host = f"{account_name}.github.com"
+    
+    config_entry = f"""
+Host {host}
+  HostName github.com
+  PreferredAuthentications publickey
+  IdentityFile f"~/.ssh/{os.path.basename(key_path)}"
+
+## Commands
+  ### cd ~/.ssh
+  ### ssh-keygen -t ed25519 -f {key_path} -C "{email}" -N '""'
+  ### cat {key_path}.pub
+  ### ssh -T git@{host}
+  ### git clone git@{host}:username/repo.git
+"""
+    
+    with open(config_path, "a") as f:
+        f.write(config_entry)
+    
+    logging.info(f"Updated SSH config for {host}")
+
+def test_github_connection(account_name):
+    """Test SSH connection to GitHub"""
+    host = f"{account_name}.github.com"
+    result = shell.run(f"ssh -T git@{host}")
+    if "successfully authenticated" in result[1]:
+        logging.info(f"Successfully authenticated with {host}")
         return True
-    logging.warning("ED25519 key not found")
-    print(f"{ansi.red}ED25519 key not found.{ansi.reset}")
-    print("Generate a new key using the following command:")
-    print(f"{ansi.cyan}ssh-keygen -t ed25519 -C 'your_email@example.com'{ansi.reset}")
+    logging.warning(f"Failed to authenticate with {host}")
     return False
 
-def check_github_key():
-    """Verify that the key is added to GitHub"""
-    print("\nTo verify if your key is added to GitHub:")
-    print(f"1. Go to {ansi.blue}https://github.com/settings/keys{ansi.reset}")
-    print("2. Check if your ED25519 key is listed")
-    print("3. If not, add your public (.pub) key to:")
-    print(f"- Authentication keys")
-    print(f"- Signing keys")
+def handle_existing_keys(public_keys):
+    print("Existing SSH keys found:")
+    for i, key in enumerate(public_keys, 1):
+        print(f"{ansi.yellow}{i}.{ansi.reset} {os.path.basename(key)}")
+    
+    if input("Do you want to make a new key? (y/n): ").lower() == 'y':
+        return generate_ssh_key()
 
-    public_key_path = os.path.expanduser('~/.ssh/id_ed25519.pub')
-    print(f"(You can find your public key at path: {ansi.cyan}{public_key_path}{ansi.reset})")
-    if os.path.exists(public_key_path):
-        with open(public_key_path, 'r') as file:
-            public_key = file.read().strip()
-        print(f"Your public key is:\n{ansi.cyan}{public_key}{ansi.reset}\n")
-        logging.info(f"Public key: {public_key}\n")
+    selection = input("Enter the number of the key you want to use: ")
+    if selection.isdigit() and 1 <= int(selection) <= len(public_keys):
+        key_path = public_keys[int(selection) - 1]
+        return process_selected_key(key_path.replace('.pub', ''))
+    else:
+        print("Invalid selection. Exiting.")
+        exit(1)
 
-    key_added = input("Is your key added to GitHub? (y/n): ")
-    if key_added.lower() not in ['y', 'yes']:
-        logging.warning("User indicated key is not added to GitHub")
-        return False
-    github_login = shell.run(f"ssh -T git@github.com")
-    if "successfully authenticated" in github_login[1]:
-        logging.info("GitHub SSH access authenticated")
-        return True
+def process_selected_key(key_path):
+    account_name = re.search(r"id_ed25519_\w+_(\w+)", key_path)
+    if account_name:
+        return key_path, account_name.group(1), None
 
+    account_name = input("Enter your GitHub account name: ")
+    user_hostname = f"{getpass.getuser()}@{socket.gethostname()}.local"
+    email = input(f"Enter your ssh key email: {ansi.grey}(default: {user_hostname}){ansi.reset}") or user_hostname
+    return key_path, account_name, email
 
 def main():
     logging.info("Starting SSH setup verification")
-    ed25519_ok = check_ed25519_key()
-    github_ok = check_github_key()
+    
+    # Check for existing keys
+    ssh_folder = os.path.expanduser("~/.ssh")
+    public_keys = glob.glob(os.path.join(ssh_folder, "*.pub"))
+    
+    if public_keys:
+        key_path, account_name, email = handle_existing_keys(public_keys)
+    else:
+        print("No existing SSH keys found. Generating a new key.")
+        key_path, account_name, email = generate_ssh_key()
 
-    if ed25519_ok and github_ok:
-        logging.info("All checks passed. SSH setup looks good")
-        print(f"{ansi.green}All checks passed. Your SSH setup looks good!{ansi.reset}")
+    # Correctly expand the tilde to the user's home directory
+    key_path = os.path.expanduser(key_path)
 
-    if not ed25519_ok or not github_ok:
-        logging.error("At least one check failed")
-        print(f"{ansi.red}At least one check failed. Please address the issues mentioned above.{ansi.reset}")
-        exit(1)
-
-    print(f"Repeat this process for any machine that needs access to this repository.")
-    logging.info("SSH setup verification completed")
-
+    # Always add .pub when reading the public key
+    with open(f"{key_path}.pub", "r") as f:
+        public_key = f.read().strip()
+    
+    update_ssh_config(key_path, account_name, email)
+    
+    print(f"\nPlease add your public key to GitHub:")
+    print(f"{ansi.cyan}{public_key}{ansi.reset}")
+    
+    input("\nPress Enter when you've added the key to GitHub...")
+    
+    if test_github_connection(account_name):
+        print(f"{ansi.green}SSH setup completed successfully!{ansi.reset}")
+    else:
+        print(f"{ansi.red}SSH setup failed. Please check your configuration and try again.{ansi.reset}")
+    
+    logging.info("SSH setup completed")
+    
+    print(f"\n{ansi.yellow}Reminder:{ansi.reset} Please reorganize your ~/.ssh/config file as needed.")
+    logging.info("Reminder: Please reorganize your ~/.ssh/config file as needed.")
 
 if __name__ == "__main__":
     main()
