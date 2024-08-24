@@ -62,7 +62,7 @@ def update_ssh_config(key_path, account_name, email):
 Host {host}
   HostName github.com
   PreferredAuthentications publickey
-  IdentityFile f"~/.ssh/{os.path.basename(key_path)}"
+  IdentityFile ~/.ssh/{os.path.basename(key_path)}
 
 ## Commands
   ### cd ~/.ssh
