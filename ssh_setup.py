@@ -1,5 +1,5 @@
 """
-This script guides the user through the process of setting up SSH keys for GitHub authentication.
+This script guides the user through the process of setting up SSH keys for GitHub authentication for new machines.
 It handles both generating new SSH keys and using existing ones, updates the SSH config file,
 and tests the connection to GitHub.
 
