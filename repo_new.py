@@ -40,13 +40,13 @@ if not git_repo_branch:
 logging.info(f"Git repo branch: {git_repo_branch}")
 
 # Ask the user if this repo is for an organization or a username
-repo_type = input(f"Is this repo for an organization or a username? ({ansi.cyan}user{ansi.reset} / {ansi.magenta}org{ansi.reset}): {ansi.grey}(default: user){ansi.reset}")
+repo_type = input(f"Is this repo for an organization or a username? ({ansi.cyan}user{ansi.reset} / {ansi.magenta}org{ansi.reset}): {ansi.grey}(default: user){ansi.reset} ").lower()
 if not repo_type:
     repo_type = "user"
 logging.info(f"Repo type: {repo_type}")
 
 # Ask user if they want public or private repo
-repo_visibility = input(f"Enter repo visibility ({ansi.cyan}public{ansi.reset} / {ansi.magenta}private{ansi.reset}): {ansi.grey}(default: private){ansi.reset}").lower()
+repo_visibility = input(f"Enter repo visibility ({ansi.cyan}public{ansi.reset} / {ansi.magenta}private{ansi.reset}): {ansi.grey}(default: private){ansi.reset}" ).lower()
 if not repo_visibility:
     repo_visibility = "private"
 elif repo_visibility not in ['public', 'private']:
@@ -97,6 +97,9 @@ else:
     ssh_key = f"~/.ssh/{os.path.basename(ssh_key)}"
 
 logging.info(f'SSH key path: "{ssh_key}"')
+
+# TODO: Determine a better way to get the SSH host if org belongs to a user that already has an SSH key created
+# i.e. org belongs to user but org matching ssh key is not found in ~/.ssh folder, only user - how to know org belongs to user?
 
 # Prompt user for SSH host
 print(f"Enter the SSH host for GitHub: {ansi.grey}(default: {username}.github.com){ansi.reset}")
