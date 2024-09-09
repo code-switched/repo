@@ -1,3 +1,23 @@
+"""
+This script guides the user through the process of setting up SSH keys for GitHub authentication.
+It handles both generating new SSH keys and using existing ones, updates the SSH config file,
+and tests the connection to GitHub.
+
+Requirements:
+- ssh-keygen
+- git
+- GitHub account
+
+The script will:
+1. Check for existing SSH keys
+2. Generate a new key or use an existing one
+3. Update the SSH config file
+4. Guide the user to add the public key to their GitHub account
+5. Test the SSH connection to GitHub
+
+Note: This script assumes the user has a GitHub account and basic understanding of SSH keys.
+"""
+
 from utils.style import ansi
 from utils.cli import shell
 import getpass
@@ -42,7 +62,7 @@ def update_ssh_config(key_path, account_name, email):
 Host {host}
   HostName github.com
   PreferredAuthentications publickey
-  IdentityFile f"~/.ssh/{os.path.basename(key_path)}"
+  IdentityFile ~/.ssh/{os.path.basename(key_path)}
 
 ## Commands
   ### cd ~/.ssh
