@@ -55,9 +55,11 @@ Host personal.codeberg.org
 
 # Alt Git Hosting at Replit
 ## Config
-Host *.replit.dev
-  HostName replit.dev
-  PreferredAuthentications publickey
+Host hobby.replit.dev
+  HostName c96b6ade-d5e4-4f7a-bc5b-52334509b2a3-00-16nh2hskw3ql8.riker.replit.dev
+  HostName replit.dev  # This is the default host name
+  User c96b6ade-d5e4-4f7a-bc5b-52334509b2a3
+  PreferredAuthentications publickeyk
   IdentityFile ~/.ssh/id_ed25519_macbook_personal
 
 ## Commands
