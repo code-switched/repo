@@ -19,13 +19,9 @@ import logging
 from logs.config import log_config
 log_config(__file__)
 
-# Check if the user has permissions for the repo
-repo_permissions = input("Do you have permissions to access the repo? (y/n): ")
-logging.info(f"User repo_permissions: {repo_permissions}")
-if repo_permissions.lower() not in ["y", "yes"]:
-    logging.warning("User does not have permissions for the repo")
-    print("Please ask the repo owner to add you as a collaborator and try again")
-    exit(1)
+# Prompt user for GitHub username
+username = input("Enter your GitHub username: ")
+logging.info(f"GitHub username: {username}")
 
 # Prompt user for git repo url
 git_repo_url = input("Enter git repo url: ")
@@ -51,9 +47,18 @@ repo_parent_folder = input(" > ")
 repo_parent_folder = os.path.expanduser(repo_parent_folder)
 logging.info(f"Repo parent folder: {repo_parent_folder}")
 
-# Process the git_repo_url to get the username/repo_name
-username, repo_name = git_repo_url.split('/')[-2:]
-logging.info(f"Username: {username}, Repo name: {repo_name}")
+# Process the git_repo_url to get the organization/repo_name
+organization, repo_name = git_repo_url.split('/')[-2:]
+logging.info(f"Organization: {organization}, Repo name: {repo_name}")
+
+if username != organization:
+    # Check if the user has permissions for the repo
+    repo_permissions = input(f"Do you have permissions as {username} to access the {organization} repo? (y/n): ")
+    logging.info(f"User repo_permissions: {repo_permissions}")
+    if repo_permissions.lower() not in ["y", "yes"]:
+        logging.warning("User does not have permissions for the repo")
+        print("Please ask the repo owner to add you as a collaborator and try again")
+        exit(1)
 
 # Change directory and create repo folder
 repo_path = os.path.join(repo_parent_folder, repo_name)
