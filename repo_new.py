@@ -126,7 +126,8 @@ ssh_host = input(f"{ansi.grey} > {ansi.reset}") or f"{username}.github.com"
 logging.info(f"SSH host: {ssh_host}")
 
 # Prompt user to open browser profile associated with github account
-input(f"Open the browser profile associated with this GitHub account and press Enter to continue...")
+print("Open the browser profile associated with this GitHub account")
+input(f"Enter to continue...")
 
 # Check gh auth status and log out if necessary
 print("Checking auth status...")
@@ -135,7 +136,7 @@ auth_status = shell.run("gh auth status")
 # TEMP print auth_status
 print("auth_status")
 print(auth_status)
-# # TODO: figure out how to get output of interactive shell commands
+# TODO: figure out how to get output of interactive shell commands
 # if "Logged in to github.com as" in auth_status[0]:
 #     logging.info("Logging out of existing gh auth session")
 #     shell.run("gh auth logout --hostname github.com")
