@@ -2,6 +2,13 @@ import logging
 import subprocess
 from utils.style import ansi
 
+# TODO: figure out how to get output of interactive shell commands
+# if "Logged in to github.com as" in auth_status[0]:
+#     logging.info("Logging out of existing gh auth session")
+#     shell.run("gh auth logout --hostname github.com")
+# Returns no output, no error
+# Only execute works with stdout PIPE, run does not return output
+
 def execute(command):
     """
     - Run a command and return the output and error
