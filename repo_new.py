@@ -124,11 +124,11 @@ if config_familiar.lower() not in ["y", "yes"]:
 # Use organization if user selects org
 if repo_type in ["org", "organization"]:
     print(f"\nNote: {ansi.red}NEW organizations must be created via GitHub web interface.{ansi.reset}")
+    print("Select the organization you want to create the repo for:")
     orgs_call = shell.execute("gh api user/orgs --paginate")
     logging.info(f"orgs_call: {orgs_call}")
     orgs = json.loads(orgs_call[0])
     org_names = [org['login'] for org in orgs]
-    
     for i, org in enumerate(org_names, 1):
         print(f"{ansi.yellow}{i}.{ansi.reset} {org}")
     org_selection = input("Select the organization by number: ")
