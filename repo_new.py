@@ -19,7 +19,7 @@ from logs.config import log_config
 log_config(__file__)
 
 # Prompt user for the folder where the repo will live
-print(f"Enter the folder where you want to create the repo (e.g. {ansi.blue}~/Documents{ansi.reset} or {ansi.blue}C:\\Users\\Name\\Documents{ansi.reset}): ")
+print(f"Enter the local parent folder for the new repo (e.g. {ansi.blue}~/Documents{ansi.reset} or {ansi.blue}C:\\Users\\Name\\Documents{ansi.reset}): ")
 repo_parent_folder = input(" > ")
 repo_parent_folder = os.path.expanduser(repo_parent_folder)
 logging.info(f"Repo parent folder: {repo_parent_folder}")
