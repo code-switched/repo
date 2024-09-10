@@ -19,7 +19,7 @@ from logs.config import log_config
 log_config(__file__)
 
 # Prompt user for the folder where the repo will live
-print(f"Enter the folder where you want to create the repo (e.g. {ansi.blue}~/Documents{ansi.reset} or {ansi.blue}C:\\Users\\YourName\\Documents{ansi.reset}): ")
+print(f"Enter the folder where you want to create the repo (e.g. {ansi.blue}~/Documents{ansi.reset} or {ansi.blue}C:\\Users\\Name\\Documents{ansi.reset}): ")
 repo_parent_folder = input(" > ")
 repo_parent_folder = os.path.expanduser(repo_parent_folder)
 logging.info(f"Repo parent folder: {repo_parent_folder}")
@@ -40,7 +40,7 @@ if not git_repo_branch:
 logging.info(f"Git repo branch: {git_repo_branch}")
 
 # Ask the user if this repo is for an organization or a username
-repo_type = input(f"Is this repo for an organization or a username? ({ansi.cyan}user{ansi.reset} / {ansi.magenta}org{ansi.reset}): {ansi.grey}(default: user){ansi.reset} ").lower()
+repo_type = input(f"Is this repo for an organization or a user? ({ansi.cyan}user{ansi.reset} / {ansi.magenta}org{ansi.reset}): {ansi.grey}(default: user){ansi.reset} ").lower()
 if not repo_type:
     repo_type = "user"
 logging.info(f"Repo type: {repo_type}")
@@ -54,18 +54,15 @@ elif repo_visibility not in ['public', 'private']:
     exit(1)
 logging.info(f"Repository visibility: {repo_visibility}")
 
-if repo_type.lower() in ["org", "organization"]:
-    print(f"Note: {ansi.red}NEW organizations must be created via GitHub web interface.{ansi.reset}")
-    username = input("Enter the name of the organization: ")
-else:
-    username = input("Enter your username: ")
-logging.info(f"User/Organization: {username}")
+# Prompt user for GitHub username
+username = input("Enter your username: ")
+logging.info(f"Username: {username}")
 
-# Prompt user for name
+# Prompt user for git name
 name = input("Enter git name: ")
 logging.info(f"Git name: {name}")
 
-# Prompt user for email
+# Prompt user for git email
 email = input("Enter git email: ")
 logging.info(f"Git email: {email}")
 
@@ -134,6 +131,10 @@ input(f"Open the browser profile associated with this GitHub account and press E
 # Check gh auth status and log out if necessary
 print("Checking auth status...")
 auth_status = shell.run("gh auth status")
+
+# TEMP print auth_status
+print("auth_status")
+print(auth_status)
 # # TODO: figure out how to get output of interactive shell commands
 # if "Logged in to github.com as" in auth_status[0]:
 #     logging.info("Logging out of existing gh auth session")
@@ -151,6 +152,12 @@ if config_familiar.lower() not in ["y", "yes"]:
     print("Please adjust your config at ~/.ssh/config and run this script again.")
     exit(1)
 # TODO: check if repo already exists
+
+if repo_type in ["org", "organization"]:
+    print(f"Note: {ansi.red}NEW organizations must be created via GitHub web interface.{ansi.reset}")
+    organization = input("Enter the name of the organization: ")
+    logging.info(f"Organization: {organization}")
+    # TODO: add logic to print organization names for user using `gh api user/orgs`
 
 # Create the repo on GitHub
 logging.info(f"Creating repository: {username}/{repo_name}")
