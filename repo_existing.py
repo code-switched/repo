@@ -67,9 +67,9 @@ os.chdir(repo_path)
 logging.info(f"Changed directory to: {repo_path}")
 
 # Initialize git and configure user
-shell.run("git init")
-shell.run(f'git config user.name "{name}"')
-shell.run(f'git config user.email {email}')
+shell.execute("git init")
+shell.execute(f'git config user.name "{name}"')
+shell.execute(f'git config user.email {email}')
 logging.info(f'Git configured with name: "{name}" and email: {email}')
 
 # Print all public SSH keys in ~/.ssh folder
@@ -114,9 +114,9 @@ if key_added.lower() not in ["y", "yes"]:
     exit(1)
 
 # Update git config for SSH key
-shell.run(f'git config user.signingkey "{ssh_key}"')
-shell.run("git config gpg.format ssh")
-shell.run("git config commit.gpgsign true")
+shell.execute(f'git config user.signingkey "{ssh_key}"')
+shell.execute("git config gpg.format ssh")
+shell.execute("git config commit.gpgsign true")
 
 # Print instructions for commit signing
 print("Add commit signing to any VSCodium based editor by adding the following to settings.json:")
@@ -129,15 +129,15 @@ print(f"Alternatively, press {ansi.yellow}Cmd/Ctrl + Shift + P{ansi.reset}, sear
 print(f"Under User Settings, search {ansi.yellow}\"Enable Commit Signing\"{ansi.reset} and turn it on")
 
 # Test SSH connection
-shell.run(f"ssh -T git@{ssh_host}")
+shell.execute(f"ssh -T git@{ssh_host}")
 
 # Set up remote and fetch
-shell.run(f"git remote add origin git@{ssh_host}:{organization}/{repo_name}.git")
-shell.run("git fetch origin")
+shell.execute(f"git remote add origin git@{ssh_host}:{organization}/{repo_name}.git")
+shell.execute("git fetch origin")
 
 # Checkout branch and pull
-shell.run(f"git checkout -b {git_repo_branch} origin/{git_repo_branch}")
-update = shell.run("git pull")
+shell.execute(f"git checkout -b {git_repo_branch} origin/{git_repo_branch}")
+update = shell.execute("git pull")
 
 if "error" in update[1].lower():
     logging.warning("Error pulling from remote")
