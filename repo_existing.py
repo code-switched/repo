@@ -53,11 +53,11 @@ logging.info(f"Organization: {organization}, Repo name: {repo_name}")
 
 if username != organization:
     # Check if the user has permissions for the repo
-    repo_permissions = input(f"Do you have permissions as {username} to access the {organization} repo? (y/n): ")
+    repo_permissions = input(f"Do you have permissions as {ansi.cyan}{username}{ansi.reset} to access the {ansi.red}{organization}{ansi.reset} repo? (y/n): ")
     logging.info(f"User repo_permissions: {repo_permissions}")
     if repo_permissions.lower() not in ["y", "yes"]:
-        logging.warning("User does not have permissions for the repo")
-        print("Please ask the repo owner to add you as a collaborator and try again")
+        logging.warning(f"Repo permissions: {repo_permissions}")
+        print("Please ask the repo owner to add you as a collaborator and try again.")
         exit(1)
 
 # Change directory and create repo folder

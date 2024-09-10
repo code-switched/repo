@@ -44,7 +44,8 @@ logging.info(f"Git repo branch: {git_repo_branch}")
 repo_type = input(f"Is this repo for an organization or a user? ({ansi.cyan}user{ansi.reset} / {ansi.magenta}org{ansi.reset}): {ansi.grey}(default: user){ansi.reset} ").lower()
 if not repo_type:
     repo_type = "user"
-elif repo_type not in ["user", "org"]:
+elif repo_type not in ["user", "org", "organization"]:
+    logging.error(f"Invalid repo type input: {repo_type}")
     print(f"{ansi.red}Invalid input.{ansi.reset} Please enter 'user' or 'org'.")
     exit(1)
 logging.info(f"Repo type: {repo_type}")
@@ -54,6 +55,7 @@ repo_visibility = input(f"Enter repo visibility ({ansi.cyan}public{ansi.reset} /
 if not repo_visibility:
     repo_visibility = "private"
 elif repo_visibility not in ['public', 'private']:
+    logging.error(f"Invalid repo visibility input: {repo_visibility}")
     print(f"{ansi.red}Invalid input.{ansi.reset} Please enter 'public' or 'private'.")
     exit(1)
 logging.info(f"Repository visibility: {repo_visibility}")
