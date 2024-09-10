@@ -108,7 +108,7 @@ logging.info(f"SSH host: {ssh_host}")
 
 # Prompt user to open browser profile associated with github account
 print("Open the browser profile associated with this GitHub account")
-input(f"Enter to continue...")
+input(f"This will log you in. Press {ansi.green}Enter{ansi.reset} to continue...")
 
 # Check gh auth status and log out if necessary
 print("Checking auth status...")
