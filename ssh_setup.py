@@ -33,7 +33,7 @@ log_config(__file__)
 def generate_ssh_key():
     """Generate a new SSH key"""
     print("\nGenerating a new SSH key...")
-    account_name = input("Enter your github account name (e.g., personal, user_name): ")
+    account_name = input("Enter your git account name (e.g., personal, user_name): ")
     user = getpass.getuser()
     hostname = socket.gethostname()
     user_hostname = f"{user}@{hostname}.local"
