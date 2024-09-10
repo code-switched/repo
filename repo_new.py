@@ -56,7 +56,7 @@ elif repo_visibility not in ['public', 'private']:
 logging.info(f"Repository visibility: {repo_visibility}")
 
 # Prompt user for GitHub username
-username = input("Enter your username: ")
+username = input("Enter your GitHub username: ")
 logging.info(f"Username: {username}")
 
 # Prompt user for git name
