@@ -12,6 +12,7 @@ Requirements:
 from utils.style import ansi
 from utils.cli import shell
 import logging
+import json
 import glob
 import os
 
@@ -76,13 +77,13 @@ if public_keys:
     for i, key in enumerate(public_keys, 1):
         is_default = key == default_key
         print(f"{ansi.yellow}{i}.{ansi.reset} {os.path.basename(key)}{' (default)' if is_default else ''}")
-    selection = input(f"Select a key number or enter a custom path {ansi.grey}(default: {os.path.basename(default_key) if default_key else 'None'}){ansi.reset}: ")
-    if not selection and default_key:
+    key_selection = input(f"Select a key number or enter a custom path: {ansi.grey}(default: {os.path.basename(default_key) if default_key else 'None'}){ansi.reset} ")
+    if not key_selection and default_key:
         ssh_key = default_key
-    elif selection.isdigit() and 1 <= int(selection) <= len(public_keys):
-        ssh_key = public_keys[int(selection) - 1]
-    elif os.path.exists(selection):
-        ssh_key = selection
+    elif key_selection.isdigit() and 1 <= int(key_selection) <= len(public_keys):
+        ssh_key = public_keys[int(key_selection) - 1]
+    elif os.path.exists(key_selection):
+        ssh_key = key_selection
     else:
         print("Invalid selection. Make sure SSH keys are in the ~/.ssh folder.")
         exit(1)
@@ -133,9 +134,6 @@ input(f"Enter to continue...")
 print("Checking auth status...")
 auth_status = shell.run("gh auth status")
 
-# TEMP print auth_status
-print("auth_status")
-print(auth_status)
 # TODO: figure out how to get output of interactive shell commands
 # if "Logged in to github.com as" in auth_status[0]:
 #     logging.info("Logging out of existing gh auth session")
@@ -154,11 +152,24 @@ if config_familiar.lower() not in ["y", "yes"]:
     exit(1)
 # TODO: check if repo already exists
 
+# Use organization if user selects org
 if repo_type in ["org", "organization"]:
-    print(f"Note: {ansi.red}NEW organizations must be created via GitHub web interface.{ansi.reset}")
-    organization = input("Enter the name of the organization: ")
+    print(f"\nNote: {ansi.red}NEW organizations must be created via GitHub web interface.{ansi.reset}")
+    orgs_call = shell.execute("gh api user/orgs --paginate")
+    logging.info(f"orgs_call: {orgs_call}")
+    orgs = json.loads(orgs_call[0])
+    org_names = [org['login'] for org in orgs]
+    
+    for i, org in enumerate(org_names, 1):
+        print(f"{ansi.yellow}{i}.{ansi.reset} {org}")
+    org_selection = input("Select the organization by number: ")
+    if org_selection.isdigit() and 1 <= int(org_selection) <= len(orgs):
+        organization = orgs[int(org_selection) - 1]['login']
+    else:
+        print("Invalid selection. Choose an organization from the list.")
+        exit(1)
     logging.info(f"Organization: {organization}")
-    # TODO: add logic to print organization names for user using `gh api user/orgs`
+    username = organization
 
 # Create the repo on GitHub
 logging.info(f"Creating repository: {username}/{repo_name}")
