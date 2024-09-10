@@ -48,7 +48,7 @@ def generate_ssh_key():
     key_name = f"id_ed25519_{machine_name}_{account_name}"
     key_path = os.path.expanduser(f"~/.ssh/{key_name}")
     
-    shell.run(f'ssh-keygen -t ed25519 -f {key_path} -C "{email}" -N ""')
+    shell.execute(f'ssh-keygen -t ed25519 -f {key_path} -C "{email}" -N ""')
     logging.info(f"Generated new SSH key: {key_path}")
     
     return key_path, account_name, email
@@ -80,7 +80,7 @@ Host {host}
 def test_github_connection(account_name):
     """Test SSH connection to GitHub"""
     host = f"{account_name}.github.com"
-    result = shell.run(f"ssh -T git@{host}")
+    result = shell.execute(f"ssh -T git@{host}")
     if "successfully authenticated" in result[1]:
         logging.info(f"Successfully authenticated with {host}")
         return True
