@@ -46,7 +46,7 @@ if not repo_type:
 logging.info(f"Repo type: {repo_type}")
 
 # Ask user if they want public or private repo
-repo_visibility = input(f"Enter repo visibility ({ansi.cyan}public{ansi.reset} / {ansi.magenta}private{ansi.reset}): {ansi.grey}(default: private){ansi.reset}" ).lower()
+repo_visibility = input(f"Enter repo visibility ({ansi.cyan}public{ansi.reset} / {ansi.magenta}private{ansi.reset}): {ansi.grey}(default: private){ansi.reset} ").lower()
 if not repo_visibility:
     repo_visibility = "private"
 elif repo_visibility not in ['public', 'private']:
