@@ -44,6 +44,9 @@ logging.info(f"Git repo branch: {git_repo_branch}")
 repo_type = input(f"Is this repo for an organization or a user? ({ansi.cyan}user{ansi.reset} / {ansi.magenta}org{ansi.reset}): {ansi.grey}(default: user){ansi.reset} ").lower()
 if not repo_type:
     repo_type = "user"
+elif repo_type not in ["user", "org"]:
+    print(f"{ansi.red}Invalid input.{ansi.reset} Please enter 'user' or 'org'.")
+    exit(1)
 logging.info(f"Repo type: {repo_type}")
 
 # Ask user if they want public or private repo
