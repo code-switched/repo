@@ -100,6 +100,28 @@ logging.info(f'SSH key path: "{ssh_key}"')
 
 # TODO: Determine a better way to get the SSH host if org belongs to a user that already has an SSH key created
 # i.e. org belongs to user but org matching ssh key is not found in ~/.ssh folder, only user - how to know org belongs to user?
+# remember to change code to use user for ssh_key and ssh_host even if org is selected
+# instead of user or org change to user and org if user wants org
+# if org input then gh api call to get orgs and list them for selection
+# `gh api user/orgs`
+# example response:
+# [
+#   {
+#     "login": "github",
+#     "id": 9919,
+#     "node_id": "MDEyOk9yZ2FuaXphdGlvbjM0",
+#     "url": "https://api.github.com/orgs/github",
+#     "repos_url": "https://api.github.com/orgs/github/repos",
+#     "events_url": "https://api.github.com/orgs/github/events",
+#     "hooks_url": "https://api.github.com/orgs/github/hooks",
+#     "issues_url": "https://api.github.com/orgs/github/issues",
+#     "members_url": "https://api.github.com/orgs/github/members{/member}",
+#     "public_members_url": "https://api.github.com/orgs/github/public_members{/member}",
+#     "avatar_url": "https://github.com/images/error/octocat_happy.gif",
+#     "description": "A great organization"
+#   }
+# ]
+
 
 # Prompt user for SSH host
 print(f"Enter the SSH host for GitHub: {ansi.grey}(default: {username}.github.com){ansi.reset}")
