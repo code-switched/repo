@@ -132,7 +132,7 @@ print(f"Under User Settings, search {ansi.yellow}\"Enable Commit Signing\"{ansi.
 shell.run(f"ssh -T git@{ssh_host}")
 
 # Set up remote and fetch
-shell.run(f"git remote add origin git@{ssh_host}:{username}/{repo_name}.git")
+shell.run(f"git remote add origin git@{ssh_host}:{organization}/{repo_name}.git")
 shell.run("git fetch origin")
 
 # Checkout branch and pull
