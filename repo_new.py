@@ -20,7 +20,7 @@ from logs.config import log_config
 log_config(__file__)
 
 # Prompt user for the folder where the repo will live
-print(f"Enter the local parent folder for the new repo (e.g. {ansi.blue}~/Documents{ansi.reset} or {ansi.blue}C:\\Users\\Name\\Documents{ansi.reset}): ")
+print(f"Enter the local parent folder for the new repo (e.g. {ansi.cyan}~/Documents{ansi.reset} or {ansi.cyan}C:\\Users\\Name\\Documents{ansi.reset}): ")
 repo_parent_folder = input(" > ")
 repo_parent_folder = os.path.expanduser(repo_parent_folder)
 logging.info(f"Repo parent folder: {repo_parent_folder}")
@@ -72,7 +72,7 @@ ssh_folder = os.path.expanduser("~/.ssh")
 public_keys = glob.glob(os.path.join(ssh_folder, "*.pub"))
 
 if public_keys:
-    print(f"Select the SSH public key for this account (e.g. {ansi.blue}id_ed25519_machine_{ansi.reset}{ansi.magenta}{username}{ansi.reset}.pub): ")
+    print(f"Select the SSH public key for this account (e.g. {ansi.grey}id_ed25519_machine_{ansi.reset}{ansi.magenta}{username}{ansi.reset}.pub): ")
     default_key = next((key for key in public_keys if username in os.path.basename(key)), None)
     for i, key in enumerate(public_keys, 1):
         is_default = key == default_key
