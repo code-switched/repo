@@ -12,8 +12,8 @@ Requirements:
 
 from utils.style import ansi
 from utils.cli import shell
-import os
 import glob
+import os
 
 import logging
 from logs.config import log_config
