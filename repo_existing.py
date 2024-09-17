@@ -26,6 +26,7 @@ logging.info(f"GitHub username: {username}")
 # Prompt user for git repo url
 git_repo_url = input("Enter git repo url: ")
 logging.info(f"Git repo URL: {git_repo_url}")
+git_repo_url = git_repo_url.rstrip('/')
 
 # Prompt user for git repo branch
 git_repo_branch = input(f"Enter git repo branch: {ansi.grey}(default: main){ansi.reset} ")
