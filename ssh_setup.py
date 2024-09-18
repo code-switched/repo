@@ -35,7 +35,7 @@ def generate_ssh_key():
     print("\nGenerating a new SSH key...")
     account_name = input("Enter your git account name (e.g., personal, user_name): ")
     user = getpass.getuser()
-    hostname = socket.gethostname()
+    hostname = socket.gethostname().rstrip('.local')
     user_hostname = f"{user}@{hostname}.local"
     email = input(f"Enter your email: {ansi.grey}(default: {user_hostname}){ansi.reset} ")
     if not email:
@@ -109,7 +109,7 @@ def process_selected_key(key_path):
         return key_path, account_name.group(1), None
 
     account_name = input("Enter your GitHub account name: ")
-    user_hostname = f"{getpass.getuser()}@{socket.gethostname()}.local"
+    user_hostname = f"{getpass.getuser()}@{socket.gethostname().rstrip('.local')}.local"
     email = input(f"Enter your ssh key email: {ansi.grey}(default: {user_hostname}){ansi.reset} ") or user_hostname
     return key_path, account_name, email
 
