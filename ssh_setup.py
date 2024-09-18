@@ -138,7 +138,7 @@ def main():
     print(f"\nPlease add your public key to GitHub:")
     print(f"{ansi.cyan}{public_key}{ansi.reset}")
     
-    input("\nPress Enter when you've added the key to GitHub...")
+    input(f"\nPress {ansi.green}Enter{ansi.reset} when you've added the key to GitHub...")
     
     if test_github_connection(account_name):
         print(f"{ansi.green}SSH setup completed successfully!{ansi.reset}")

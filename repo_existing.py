@@ -108,7 +108,7 @@ ssh_host = input(f"{ansi.grey} > {ansi.reset}") or f"{username}.github.com"
 logging.info(f"SSH host: {ssh_host}")
 
 # Check if the user has added their SSH key to GitHub
-key_added = input("Have you added your SSH key to GitHub? This is the last step. (y/n): ")
+key_added = input(f"Have you added your SSH key to GitHub? {ansi.yellow}This is the last step.{ansi.reset} (y/n): ")
 logging.info(f"User key_added: {key_added}")
 if key_added.lower() not in ["y", "yes"]:
     print("Please add your SSH key to GitHub and try again")
