@@ -18,17 +18,16 @@ The script will:
 Note: This script assumes the user has a GitHub account and basic understanding of SSH keys.
 """
 
-from utils.style import ansi
-from utils.cli import shell
 import getpass
 import socket
 import os
 import re
 import glob
+from utils.style import ansi
+from utils.cli import shell
 
-import logging
 from logs.config import log_config
-log_config(__file__)
+logger = log_config(__file__)
 
 def generate_ssh_key():
     """Generate a new SSH key"""
@@ -49,7 +48,7 @@ def generate_ssh_key():
     key_path = os.path.expanduser(f"~/.ssh/{key_name}")
     
     shell.execute(f'ssh-keygen -t ed25519 -f {key_path} -C "{email}" -N ""')
-    logging.info(f"Generated new SSH key: {key_path}")
+    logger.info(f"Generated new SSH key: {key_path}")
     
     return key_path, account_name, email
 
@@ -75,16 +74,16 @@ Host {host}
     with open(config_path, "a") as f:
         f.write(config_entry)
     
-    logging.info(f"Updated SSH config for {host}")
+    logger.info(f"Updated SSH config for {host}")
 
 def test_github_connection(account_name):
     """Test SSH connection to GitHub"""
     host = f"{account_name}.github.com"
     result = shell.execute(f"ssh -T git@{host}")
     if "successfully authenticated" in result[1]:
-        logging.info(f"Successfully authenticated with {host}")
+        logger.info(f"Successfully authenticated with {host}")
         return True
-    logging.warning(f"Failed to authenticate with {host}")
+    logger.warning(f"Failed to authenticate with {host}")
     return False
 
 def handle_existing_keys(public_keys):
@@ -114,7 +113,7 @@ def process_selected_key(key_path):
     return key_path, account_name, email
 
 def main():
-    logging.info("Starting SSH setup verification")
+    logger.info("Starting SSH setup verification")
     
     # Check for existing keys
     ssh_folder = os.path.expanduser("~/.ssh")
@@ -145,10 +144,10 @@ def main():
     else:
         print(f"{ansi.red}SSH setup failed. Please check your configuration and try again.{ansi.reset}")
     
-    logging.info("SSH setup completed")
+    logger.info("SSH setup completed")
     
     print(f"\n{ansi.yellow}Reminder:{ansi.reset} Please reorganize your ~/.ssh/config file as needed.")
-    logging.info("Reminder: Please reorganize your ~/.ssh/config file as needed.")
+    logger.info("Reminder: Please reorganize your ~/.ssh/config file as needed.")
 
 if __name__ == "__main__":
     main()

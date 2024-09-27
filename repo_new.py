@@ -9,68 +9,67 @@ Requirements:
 - ssh key added to GitHub account
 - added as collaborator to the repo
 """
-from utils.style import ansi
-from utils.cli import shell
-import logging
 import json
 import glob
 import os
+from utils.style import ansi
+from utils.cli import shell
 
 from logs.config import log_config
-log_config(__file__)
+logger = log_config(__file__)
 
 # Prompt user for the folder where the repo will live
 print(f"Enter the local parent folder for the new repo (e.g. {ansi.cyan}~/Documents{ansi.reset} or {ansi.cyan}C:\\Users\\Name\\Documents{ansi.reset}): ")
 repo_parent_folder = input(" > ")
 repo_parent_folder = os.path.expanduser(repo_parent_folder)
-logging.info(f"Repo parent folder: {repo_parent_folder}")
+logger.info(f"Repo parent folder: {repo_parent_folder}")
 
 # Change directory and create repo folder
 os.makedirs(repo_parent_folder, exist_ok=True)
 os.chdir(repo_parent_folder)
-logging.info(f"Changed directory to: {repo_parent_folder}")
+logger.info(f"Changed directory to: {repo_parent_folder}")
 
 # Ask the user for the repo name
 repo_name = input("Enter the name of the new repo: ")
-logging.info(f"Repo name: {repo_name}")
+logger.info(f"Repo name: {repo_name}")
 
 # Prompt user for git repo branch
 git_repo_branch = input(f"Enter git repo branch: {ansi.grey}(default: main){ansi.reset} ")
 if not git_repo_branch:
     git_repo_branch = "main"
-logging.info(f"Git repo branch: {git_repo_branch}")
+logger.info(f"Git repo branch: {git_repo_branch}")
 
 # Ask the user if this repo is for an organization or a username
 repo_type = input(f"Is this repo for an organization or a user? ({ansi.cyan}user{ansi.reset} / {ansi.magenta}org{ansi.reset}): {ansi.grey}(default: user){ansi.reset} ").lower()
 if not repo_type:
     repo_type = "user"
 elif repo_type not in ["user", "org", "organization"]:
-    logging.error(f"Invalid repo type input: {repo_type}")
+    logger.error(f"Invalid repo type input: {repo_type}")
     print(f"{ansi.red}Invalid input.{ansi.reset} Please enter 'user' or 'org'.")
     exit(1)
-logging.info(f"Repo type: {repo_type}")
+logger.info(f"Repo type: {repo_type}")
 
 # Ask user if they want public or private repo
 repo_visibility = input(f"Enter repo visibility ({ansi.cyan}public{ansi.reset} / {ansi.magenta}private{ansi.reset}): {ansi.grey}(default: private){ansi.reset} ").lower()
 if not repo_visibility:
     repo_visibility = "private"
 elif repo_visibility not in ['public', 'private']:
-    logging.error(f"Invalid repo visibility input: {repo_visibility}")
+    logger.error(f"Invalid repo visibility input: {repo_visibility}")
     print(f"{ansi.red}Invalid input.{ansi.reset} Please enter 'public' or 'private'.")
     exit(1)
-logging.info(f"Repository visibility: {repo_visibility}")
+logger.info(f"Repository visibility: {repo_visibility}")
 
 # Prompt user for GitHub username
 username = input("Enter your GitHub username: ")
-logging.info(f"Username: {username}")
+logger.info(f"Username: {username}")
 
 # Prompt user for git name
 name = input("Enter git name: ")
-logging.info(f"Git name: {name}")
+logger.info(f"Git name: {name}")
 
 # Prompt user for git email
 email = input("Enter git email: ")
-logging.info(f"Git email: {email}")
+logger.info(f"Git email: {email}")
 
 # Print all public SSH keys in ~/.ssh folder
 ssh_folder = os.path.expanduser("~/.ssh")
@@ -99,12 +98,12 @@ else:
     ssh_key = input(" > ")
     ssh_key = f"~/.ssh/{os.path.basename(ssh_key)}"
 
-logging.info(f'SSH key path: "{ssh_key}"')
+logger.info(f'SSH key path: "{ssh_key}"')
 
 # Prompt user for SSH host
 print(f"Enter the SSH host for GitHub: {ansi.grey}(default: {username}.github.com){ansi.reset}")
 ssh_host = input(f"{ansi.grey} > {ansi.reset}") or f"{username}.github.com"
-logging.info(f"SSH host: {ssh_host}")
+logger.info(f"SSH host: {ssh_host}")
 
 # Prompt user to open browser profile associated with github account
 print("Open the browser profile associated with this GitHub account")
@@ -120,9 +119,9 @@ shell.run("gh auth status")
 shell.run("gh repo list")
 
 config_familiar = input("\nIs the above configuration familiar? (y/n): ")
-logging.info(f"User config_familiar response: {config_familiar}")
+logger.info(f"User config_familiar response: {config_familiar}")
 if config_familiar.lower() not in ["y", "yes"]:
-    logging.warning("User indicated unfamiliar configuration")
+    logger.warning("User indicated unfamiliar configuration")
     print("Please adjust your config at ~/.ssh/config and run this script again.")
     exit(1)
 
@@ -131,7 +130,7 @@ if repo_type in ["org", "organization"]:
     print(f"\nNote: {ansi.red}NEW organizations must be created via GitHub web interface.{ansi.reset}")
     print("Select the organization you want to create the repo for:")
     orgs_call = shell.execute("gh api user/orgs --paginate")
-    logging.info(f"orgs_call: {orgs_call}")
+    logger.info(f"orgs_call: {orgs_call}")
     orgs = json.loads(orgs_call[0])
     org_names = [org['login'] for org in orgs]
     for i, org in enumerate(org_names, 1):
@@ -142,17 +141,17 @@ if repo_type in ["org", "organization"]:
     else:
         print("Invalid selection. Choose an organization from the list.")
         exit(1)
-    logging.info(f"Organization: {organization}")
+    logger.info(f"Organization: {organization}")
     username = organization
 
 # Create the repo on GitHub
-logging.info(f"Creating repository: {username}/{repo_name}")
+logger.info(f"Creating repository: {username}/{repo_name}")
 print(f"\nCreating repository: {ansi.cyan}{username}/{repo_name}{ansi.reset}")
 create_repo = shell.run(f"gh repo create {username}/{repo_name} --{repo_visibility} --clone")
 
 # Check if repo was created successfully
 if create_repo[1]:
-    logging.error("Failed to create repository")
+    logger.error("Failed to create repository")
     print(f"{ansi.red}Failed to create repository.{ansi.reset} Please check the error message above and try again.")
     exit(1)
 
@@ -167,7 +166,7 @@ shell.execute('git config commit.gpgsign true')
 # User
 shell.execute(f'git config user.name "{name}"')
 shell.execute(f'git config user.email {email}')
-logging.info(f'Git configured with name: "{name}" and email: {email}')
+logger.info(f'Git configured with name: "{name}" and email: {email}')
 
 # Set up remote
 shell.execute("git remote remove origin")
@@ -180,5 +179,5 @@ shell.execute('git add .')
 shell.execute('git commit -m "Initial commit"')
 shell.execute(f'git push -u origin {git_repo_branch}')
 
-logging.info("Repository setup complete")
+logger.info("Repository setup complete")
 print(f"\n{ansi.green}Repository setup complete!{ansi.reset}")

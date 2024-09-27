@@ -9,12 +9,12 @@ def log_config(script_path):
     log_file = os.path.join('logs', log_name)
 
     # Set up the RotatingFileHandler
-    file_handler = RotatingFileHandler(log_file, maxBytes=1024*1024*10, backupCount=5, encoding='utf-8')  # 10 MB per file, keep 5 backup files
+    file_handler = RotatingFileHandler(log_file, maxBytes=1024*1024*10, backupCount=10, encoding='utf-8')
     formatter = logging.Formatter('%(asctime)s %(levelname)s [%(filename)s:%(lineno)d] %(message)s')
     file_handler.setFormatter(formatter)
 
-    # Add the file handler to the logger
-    logger = logging.getLogger()
+    # Create a logger instance
+    logger = logging.getLogger(script_name)
     logger.addHandler(file_handler)
     logger.setLevel(logging.INFO)
 

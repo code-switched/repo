@@ -10,54 +10,53 @@ Requirements:
 - added as collaborator to the repo
 """
 
-from utils.style import ansi
-from utils.cli import shell
 import glob
 import os
+from utils.style import ansi
+from utils.cli import shell
 
-import logging
 from logs.config import log_config
-log_config(__file__)
+logger = log_config(__file__)
 
 # Prompt user for GitHub username
 username = input("Enter your GitHub username: ")
-logging.info(f"GitHub username: {username}")
+logger.info(f"GitHub username: {username}")
 
 # Prompt user for git repo url
 git_repo_url = input("Enter git repo url: ")
-logging.info(f"Git repo URL: {git_repo_url}")
+logger.info(f"Git repo URL: {git_repo_url}")
 git_repo_url = git_repo_url.rstrip('/')
 
 # Prompt user for git repo branch
 git_repo_branch = input(f"Enter git repo branch: {ansi.grey}(default: main){ansi.reset} ")
 if not git_repo_branch:
     git_repo_branch = "main"
-logging.info(f"Git repo branch: {git_repo_branch}")
+logger.info(f"Git repo branch: {git_repo_branch}")
 
 # Prompt user for name
 name = input("Enter git name: ")
-logging.info(f"Git name: {name}")
+logger.info(f"Git name: {name}")
 
 # Prompt user for email
 email = input("Enter git email: ")
-logging.info(f"Git email: {email}")
+logger.info(f"Git email: {email}")
 
 # Prompt user for the folder where the repo will live
 print(f"Enter the folder where you want to create the repo (e.g. {ansi.cyan}~/Documents{ansi.reset} or {ansi.cyan}C:\\Users\\YourName\\Documents{ansi.reset}): ")
 repo_parent_folder = input(" > ")
 repo_parent_folder = os.path.expanduser(repo_parent_folder)
-logging.info(f"Repo parent folder: {repo_parent_folder}")
+logger.info(f"Repo parent folder: {repo_parent_folder}")
 
 # Process the git_repo_url to get the organization/repo_name
 organization, repo_name = git_repo_url.split('/')[-2:]
-logging.info(f"Organization: {organization}, Repo name: {repo_name}")
+logger.info(f"Organization: {organization}, Repo name: {repo_name}")
 
 if username != organization:
     # Check if the user has permissions for the repo
     repo_permissions = input(f"Do you have permissions as {ansi.cyan}{username}{ansi.reset} to access the {ansi.red}{organization}{ansi.reset} repo? (y/n): ")
-    logging.info(f"User repo_permissions: {repo_permissions}")
+    logger.info(f"User repo_permissions: {repo_permissions}")
     if repo_permissions.lower() not in ["y", "yes"]:
-        logging.warning(f"Repo permissions: {repo_permissions}")
+        logger.warning(f"Repo permissions: {repo_permissions}")
         print("Please ask the repo owner to add you as a collaborator and try again.")
         exit(1)
 
@@ -65,13 +64,13 @@ if username != organization:
 repo_path = os.path.join(repo_parent_folder, repo_name)
 os.makedirs(repo_path, exist_ok=True)
 os.chdir(repo_path)
-logging.info(f"Changed directory to: {repo_path}")
+logger.info(f"Changed directory to: {repo_path}")
 
 # Initialize git and configure user
 shell.execute("git init")
 shell.execute(f'git config user.name "{name}"')
 shell.execute(f'git config user.email {email}')
-logging.info(f'Git configured with name: "{name}" and email: {email}')
+logger.info(f'Git configured with name: "{name}" and email: {email}')
 
 # Print all public SSH keys in ~/.ssh folder
 ssh_folder = os.path.expanduser("~/.ssh")
@@ -100,16 +99,16 @@ else:
     ssh_key = input(" > ")
     ssh_key = f"~/.ssh/{os.path.basename(ssh_key)}"
 
-logging.info(f'SSH key path: "{ssh_key}"')
+logger.info(f'SSH key path: "{ssh_key}"')
 
 # Prompt user for SSH host
 print(f"Enter the SSH host for GitHub: {ansi.grey}(default: {username}.github.com){ansi.reset}")
 ssh_host = input(f"{ansi.grey} > {ansi.reset}") or f"{username}.github.com"
-logging.info(f"SSH host: {ssh_host}")
+logger.info(f"SSH host: {ssh_host}")
 
 # Check if the user has added their SSH key to GitHub
 key_added = input(f"Have you added your SSH key to GitHub? {ansi.yellow}This is the last step.{ansi.reset} (y/n): ")
-logging.info(f"User key_added: {key_added}")
+logger.info(f"User key_added: {key_added}")
 if key_added.lower() not in ["y", "yes"]:
     print("Please add your SSH key to GitHub and try again")
     exit(1)
@@ -141,9 +140,9 @@ shell.execute(f"git checkout -b {git_repo_branch} origin/{git_repo_branch}")
 update = shell.execute("git pull")
 
 if "error" in update[1].lower():
-    logging.warning("Error pulling from remote")
+    logger.warning("Error pulling from remote")
     print(f"{ansi.red}Error pulling from remote{ansi.reset}")
     exit(1)
 
-logging.info("Repository setup complete")
+logger.info("Repository setup complete")
 print(f"{ansi.green}Repository setup complete!{ansi.reset}")
