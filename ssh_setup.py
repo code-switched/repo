@@ -108,7 +108,7 @@ def process_selected_key(key_path):
         return key_path, account_name.group(1), None
 
     account_name = input("Enter your GitHub account name: ")
-    user_hostname = f"{getpass.getuser()}@{socket.gethostname().rstrip('.local')}.local"
+    user_hostname = f"{getpass.getuser()}@{socket.gethostname().replace('.local', '')}.local"
     email = input(f"Enter your ssh key email: {ansi.grey}(default: {user_hostname}){ansi.reset} ") or user_hostname
     return key_path, account_name, email
 
