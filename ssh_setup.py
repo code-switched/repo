@@ -43,7 +43,7 @@ def generate_ssh_key():
     machine_name = input(f"Enter your machine name (e.g., desktop, laptop): {ansi.grey}(default: {default_machine_name}){ansi.reset} ")
     if not machine_name:
         machine_name = default_machine_name
-    
+
     key_name = f"id_ed25519_{machine_name}_{account_name}"
     key_path = os.path.expanduser(f"~/.ssh/{key_name}")
 
@@ -62,7 +62,7 @@ def update_ssh_config(key_path, account_name, email):
     """Update SSH config file"""
     config_path = os.path.expanduser("~/.ssh/config")
     host = f"{account_name}.github.com"
-    
+
     config_entry = f"""
 Host {host}
   HostName github.com
@@ -76,7 +76,7 @@ Host {host}
   ### ssh -T git@{host}
   ### git clone git@{host}:username/repo.git
 """
-    
+
     with open(config_path, "a") as f:
         f.write(config_entry)
     
@@ -96,7 +96,7 @@ def handle_existing_keys(public_keys):
     print("Existing SSH keys found:")
     for i, key in enumerate(public_keys, 1):
         print(f"{ansi.yellow}{i}.{ansi.reset} {os.path.basename(key)}")
-    
+
     if input("Do you want to make a new key? (y/n): ").lower() == 'y':
         return generate_ssh_key()
 
@@ -120,7 +120,7 @@ def process_selected_key(key_path):
 
 def main():
     logger.info("Starting SSH setup verification")
-    
+
     # Check for existing keys
     ssh_folder = os.path.expanduser("~/.ssh")
     public_keys = glob.glob(os.path.join(ssh_folder, "*.pub"))
@@ -137,21 +137,21 @@ def main():
     # Always add .pub when reading the public key
     with open(f"{key_path}.pub", "r") as f:
         public_key = f.read().strip()
-    
+
     update_ssh_config(key_path, account_name, email)
-    
+
     print(f"\nPlease add your public key to GitHub:")
     print(f"{ansi.cyan}{public_key}{ansi.reset}")
-    
+
     input(f"\nPress {ansi.green}Enter{ansi.reset} when you've added the key to GitHub...")
     
     if test_github_connection(account_name):
         print(f"{ansi.green}SSH setup completed successfully!{ansi.reset}")
     else:
         print(f"{ansi.red}SSH setup failed. Please check your configuration and try again.{ansi.reset}")
-    
+
     logger.info("SSH setup completed")
-    
+
     print(f"\n{ansi.yellow}Reminder:{ansi.reset} Please reorganize your ~/.ssh/config file as needed.")
     logger.info("Reminder: Please reorganize your ~/.ssh/config file as needed.")
 
