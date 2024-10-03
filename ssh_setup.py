@@ -47,7 +47,7 @@ def generate_ssh_key():
     key_name = f"id_ed25519_{machine_name}_{account_name}"
     key_path = os.path.expanduser(f"~/.ssh/{key_name}")
 
-    proceed = input(f"Are you sure you want to {ansi.green}generate a key{ansi.reset}? (y/N): ")
+    proceed = input(f"Are you sure you want to {ansi.yellow}generate a key{ansi.reset}? (y/N): ")
     logger.info(f"User input to proceed: {proceed}")
     if proceed.lower() not in ['y', 'yes']:
         print("Exiting.")
