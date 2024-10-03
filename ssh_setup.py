@@ -34,12 +34,12 @@ def generate_ssh_key():
     print("\nGenerating a new SSH key...")
     account_name = input("Enter your git account name (e.g., personal, user_name): ")
     user = getpass.getuser()
-    hostname = socket.gethostname().rstrip('.local')
+    hostname = socket.gethostname().replace('.local', '')
     user_hostname = f"{user}@{hostname}.local"
     email = input(f"Enter your email: {ansi.grey}(default: {user_hostname}){ansi.reset} ")
     if not email:
         email = user_hostname
-    default_machine_name = re.sub(r'[^a-z0-9]', '', socket.gethostname().rstrip('.local').lower())
+    default_machine_name = re.sub(r'[^a-z0-9]', '', hostname.lower())
     machine_name = input(f"Enter your machine name (e.g., desktop, laptop): {ansi.grey}(default: {default_machine_name}){ansi.reset} ")
     if not machine_name:
         machine_name = default_machine_name
