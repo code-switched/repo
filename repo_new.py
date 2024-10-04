@@ -162,6 +162,7 @@ os.chdir(repo_name)
 shell.execute(f'git config user.signingkey "{ssh_key}"')
 shell.execute('git config gpg.format ssh')
 shell.execute('git config commit.gpgsign true')
+shell.execute('git config pull.rebase true')
 
 # User
 shell.execute(f'git config user.name "{name}"')

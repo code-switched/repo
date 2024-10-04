@@ -117,6 +117,7 @@ if key_added.lower() not in ["y", "yes"]:
 shell.execute(f'git config user.signingkey "{ssh_key}"')
 shell.execute("git config gpg.format ssh")
 shell.execute("git config commit.gpgsign true")
+shell.execute("git config pull.rebase true")
 
 # Print instructions for commit signing
 print("Add commit signing to any VSCodium based editor by adding the following to settings.json:")
