@@ -62,12 +62,13 @@ def update_ssh_config(key_path, account_name, email):
     """Update SSH config file"""
     config_path = os.path.expanduser("~/.ssh/config")
     host = f"{account_name}.github.com"
+    key_path = os.path.basename(key_path)
 
     config_entry = f"""
 Host {host}
   HostName github.com
   PreferredAuthentications publickey
-  IdentityFile ~/.ssh/{os.path.basename(key_path)}
+  IdentityFile ~/.ssh/{key_path}
 
 ## Commands
   ### cd ~/.ssh
