@@ -78,7 +78,7 @@ public_keys = glob.glob(os.path.join(ssh_folder, "*.pub"))
 
 if public_keys:
     print(f"Select the SSH public key for this account (e.g. {ansi.grey}id_ed25519_machine_{ansi.reset}{ansi.magenta}{username}{ansi.reset}.pub): ")
-    default_key = next((key for key in public_keys if username in os.path.basename(key)), None)
+    default_key = next((key for key in public_keys if username.lower() in os.path.basename(key).lower()), None)
     for i, key in enumerate(public_keys, 1):
         is_default = key == default_key
         print(f"{ansi.yellow}{i}.{ansi.reset} {os.path.basename(key)}{' (default)' if is_default else ''}")
