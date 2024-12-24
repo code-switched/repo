@@ -1,12 +1,18 @@
 from logging.handlers import RotatingFileHandler
+from pathlib import Path
 import logging
 import sys
 import os
 
-def log_config(script_path):
-    script_name = os.path.basename(script_path)
-    log_name = script_name.rsplit('.', 1)[0] + '.log'
-    log_file = os.path.join('logs', log_name)
+def log_config(filename, base_path=None):
+    script_name = os.path.basename(filename)
+    if base_path is None:
+        base_path = Path.cwd()
+
+    log_dir = base_path / 'logs'
+    log_dir.mkdir(exist_ok=True)
+
+    log_file = log_dir / f"{Path(filename).stem}.log"
 
     # Set up the RotatingFileHandler
     file_handler = RotatingFileHandler(log_file, maxBytes=1024*1024*10, backupCount=10, encoding='utf-8')
