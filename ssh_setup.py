@@ -34,7 +34,7 @@ def generate_ssh_key():
     print("\nGenerating a new SSH key...")
     account_name = input("Enter your git account name (e.g., personal, user_name): ")
     user = getpass.getuser()
-    hostname = socket.gethostname().replace('.local', '')
+    hostname = socket.gethostname().replace('.local', '').replace('.home', '')
     user_hostname = f"{user}@{hostname}.local"
     email = input(f"Enter your email: {ansi.grey}(default: {user_hostname}){ansi.reset} ")
     if not email:
