@@ -177,7 +177,7 @@ shell.execute(f"git remote add origin git@{ssh_host}:{username}/{repo_name}.git"
 shell.execute(f'git checkout -b {git_repo_branch}')
 shell.execute('type nul > README.md')
 shell.execute('git add .')
-shell.execute('git commit -m "Initial commit"')
+shell.execute('git commit -m "chore: init"')
 shell.execute(f'git push -u origin {git_repo_branch}')
 
 logger.info("Repository setup complete")

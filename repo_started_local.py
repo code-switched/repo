@@ -191,7 +191,7 @@ shell.execute(f"git remote add origin git@{ssh_host}:{username}/{repo_name}.git"
 status = shell.execute("git status --porcelain")
 if status[0]:
     shell.execute("git add .")
-    shell.execute('git commit -m "Initial commit"')
+    shell.execute('git commit -m "chore: init"')
 
 # Push to remote
 shell.execute('git push -u origin main')
