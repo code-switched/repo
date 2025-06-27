@@ -19,23 +19,23 @@ logger = log_config(__file__)
 def get_project_path():
     print(f"Enter the path to your existing project: {ansi.grey}(or press Enter for current directory){ansi.reset}")
     path = input(" > ").strip()
-    
+
     if not path:
         path = os.getcwd()
-    
+
     # Convert to absolute path
     path = os.path.abspath(path)
-    
+
     if not os.path.exists(path):
         logger.error(f"Path does not exist: {path}")
         print(f"{ansi.red}Error:{ansi.reset} The specified path does not exist.")
         exit(1)
-    
+
     if not os.path.isdir(path):
         logger.error(f"Path is not a directory: {path}")
         print(f"{ansi.red}Error:{ansi.reset} The specified path is not a directory.")
         exit(1)
-        
+
     return path
 
 project_path = get_project_path()
