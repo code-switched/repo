@@ -7,9 +7,10 @@ Requirements:
 - ed25519 ssh key set up
 - ssh key added to GitHub account
 """
+import os
 import json
 import glob
-import os
+
 from utils.style import ansi
 from utils.cli import shell
 
