@@ -17,6 +17,7 @@ from logs.config import log_config
 logger = log_config(__file__)
 
 def get_project_path():
+    """Get the path to the project directory."""
     print(f"Enter the path to your existing project: {ansi.grey}(or press Enter for current directory){ansi.reset}")
     path = input(" > ").strip()
 
@@ -27,66 +28,66 @@ def get_project_path():
     path = os.path.abspath(path)
 
     if not os.path.exists(path):
-        logger.error(f"Path does not exist: {path}")
+        logger.error("Path does not exist: %s", path)
         print(f"{ansi.red}Error:{ansi.reset} The specified path does not exist.")
         exit(1)
 
     if not os.path.isdir(path):
-        logger.error(f"Path is not a directory: {path}")
+        logger.error("Path is not a directory: %s", path)
         print(f"{ansi.red}Error:{ansi.reset} The specified path is not a directory.")
         exit(1)
 
     return path
 
 project_path = get_project_path()
-logger.info(f"Project directory: {project_path}")
+logger.info("Project directory: %s", project_path)
 
 # Change to the project directory
 os.chdir(project_path)
 current_dir = os.getcwd()
-logger.info(f"Changed to directory: {current_dir}")
+logger.info("Changed to directory: %s", current_dir)
 
 repo_name = os.path.basename(current_dir)
-logger.info(f"Repo name from directory: {repo_name}")
+logger.info("Repo name from directory: %s", repo_name)
 
 # Confirm repo name or allow change
 print(f"Current folder name will be used as repo name: {ansi.cyan}{repo_name}{ansi.reset}")
 new_name = input(f"Press Enter to keep or type new name: {ansi.grey}(default: {repo_name}){ansi.reset} ")
 if new_name:
     repo_name = new_name
-logger.info(f"Final repo name: {repo_name}")
+logger.info("Final repo name: %s", repo_name)
 
 # Ask the user if this repo is for an organization or a username
 repo_type = input(f"Is this repo for an organization or a user? ({ansi.cyan}user{ansi.reset} / {ansi.magenta}org{ansi.reset}): {ansi.grey}(default: user){ansi.reset} ").lower()
 if not repo_type:
     repo_type = "user"
 elif repo_type not in ["user", "org", "organization"]:
-    logger.error(f"Invalid repo type input: {repo_type}")
+    logger.error("Invalid repo type input: %s", repo_type)
     print(f"{ansi.red}Invalid input.{ansi.reset} Please enter 'user' or 'org'.")
     exit(1)
-logger.info(f"Repo type: {repo_type}")
+logger.info("Repo type: %s", repo_type)
 
 # Ask user if they want public or private repo
 repo_visibility = input(f"Enter repo visibility ({ansi.cyan}public{ansi.reset} / {ansi.magenta}private{ansi.reset}): {ansi.grey}(default: private){ansi.reset} ").lower()
 if not repo_visibility:
     repo_visibility = "private"
 elif repo_visibility not in ['public', 'private']:
-    logger.error(f"Invalid repo visibility input: {repo_visibility}")
+    logger.error("Invalid repo visibility input: %s", repo_visibility)
     print(f"{ansi.red}Invalid input.{ansi.reset} Please enter 'public' or 'private'.")
     exit(1)
-logger.info(f"Repository visibility: {repo_visibility}")
+logger.info("Repository visibility: %s", repo_visibility)
 
 # Prompt user for GitHub username
 username = input("Enter your GitHub username: ")
-logger.info(f"Username: {username}")
+logger.info("Username: %s", username)
 
 # Prompt user for git name
 name = input("Enter git name: ")
-logger.info(f"Git name: {name}")
+logger.info("Git name: %s", name)
 
 # Prompt user for git email
 email = input("Enter git email: ")
-logger.info(f"Git email: {email}")
+logger.info("Git email: %s", email)
 
 # Print all public SSH keys in ~/.ssh folder
 ssh_folder = os.path.expanduser("~/.ssh")
@@ -115,12 +116,12 @@ else:
     ssh_key = input(" > ")
     ssh_key = f"~/.ssh/{os.path.basename(ssh_key)}"
 
-logger.info(f'SSH key path: "{ssh_key}"')
+logger.info('SSH key path: "%s"', ssh_key)
 
 # Prompt user for SSH host
 print(f"Enter the SSH host for GitHub: {ansi.grey}(default: {username}.github.com){ansi.reset}")
 ssh_host = input(f"{ansi.grey} > {ansi.reset}") or f"{username}.github.com"
-logger.info(f"SSH host: {ssh_host}")
+logger.info("SSH host: %s", ssh_host)
 
 # Prompt user to open browser profile associated with github account
 print("Open the browser profile associated with this GitHub account")
@@ -158,7 +159,7 @@ if repo_type in ["org", "organization"]:
     print(f"\nNote: {ansi.red}NEW organizations must be created via GitHub web interface.{ansi.reset}")
     print("Select the organization you want to create the repo for:")
     orgs_call = shell.execute("gh api user/orgs --paginate")
-    logger.info(f"orgs_call: {orgs_call}")
+    logger.info("orgs_call: %s", orgs_call)
     orgs = json.loads(orgs_call[0])
     org_names = [org['login'] for org in orgs]
     for i, org in enumerate(org_names, 1):
@@ -169,11 +170,11 @@ if repo_type in ["org", "organization"]:
     else:
         print("Invalid selection. Choose an organization from the list.")
         exit(1)
-    logger.info(f"Organization: {organization}")
+    logger.info("Organization: %s", organization)
     username = organization
 
 # Create the repo on GitHub
-logger.info(f"Creating repository: {username}/{repo_name}")
+logger.info("Creating repository: %s/%s", username, repo_name)
 print(f"\nCreating repository: {ansi.cyan}{username}/{repo_name}{ansi.reset}")
 create_repo = shell.run(f"gh repo create {username}/{repo_name} --{repo_visibility} --source=.")
 
