@@ -25,8 +25,8 @@ def get_project_path():
     if not path:
         path = os.getcwd()
 
-    # Convert to absolute path
-    path = os.path.abspath(os.path.expanduser(path))
+    # Expand user home directory
+    path = os.path.expanduser(path)
 
     if not os.path.exists(path):
         logger.error("Path does not exist: %s", path)
