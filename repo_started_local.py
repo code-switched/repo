@@ -26,7 +26,7 @@ def get_project_path():
         path = os.getcwd()
 
     # Convert to absolute path
-    path = os.path.abspath(path)
+    path = os.path.abspath(os.path.expanduser(path))
 
     if not os.path.exists(path):
         logger.error("Path does not exist: %s", path)
