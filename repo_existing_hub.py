@@ -87,8 +87,8 @@ if public_keys:
         ssh_key = default_key
     elif selection.isdigit() and 1 <= int(selection) <= len(public_keys):
         ssh_key = public_keys[int(selection) - 1]
-    elif os.path.exists(selection):
-        ssh_key = selection
+    elif os.path.exists(os.path.expanduser(selection)):
+        ssh_key = os.path.expanduser(selection)
     else:
         print("Invalid selection. Make sure SSH keys are in the ~/.ssh folder.")
         exit(1)
