@@ -9,9 +9,10 @@ Requirements:
 - ssh key added to GitHub account
 - added as collaborator to the repo
 """
+import os
+import sys
 import json
 import glob
-import os
 from utils.style import ansi
 from utils.cli import shell
 
@@ -46,7 +47,7 @@ if not repo_type:
 elif repo_type not in ["user", "org", "organization"]:
     logger.error("Invalid repo type input: %s", repo_type)
     print(f"{ansi.red}Invalid input.{ansi.reset} Please enter 'user' or 'org'.")
-    exit(1)
+    sys.exit(1)
 logger.info("Repo type: %s", repo_type)
 
 # Ask user if they want public or private repo
@@ -56,7 +57,7 @@ if not repo_visibility:
 elif repo_visibility not in ['public', 'private']:
     logger.error("Invalid repo visibility input: %s", repo_visibility)
     print(f"{ansi.red}Invalid input.{ansi.reset} Please enter 'public' or 'private'.")
-    exit(1)
+    sys.exit(1)
 logger.info("Repository visibility: %s", repo_visibility)
 
 # Prompt user for GitHub username
@@ -90,7 +91,7 @@ if public_keys:
         ssh_key = os.path.expanduser(key_selection)
     else:
         print("Invalid selection. Make sure SSH keys are in the ~/.ssh folder.")
-        exit(1)
+        sys.exit(1)
     ssh_key = f"~/.ssh/{os.path.basename(ssh_key)}"
 else:
     print("No public SSH keys found in ~/.ssh folder.")
@@ -123,7 +124,7 @@ logger.info("User config_familiar response: %s", config_familiar)
 if config_familiar.lower() not in ["y", "yes"]:
     logger.warning("User indicated unfamiliar configuration")
     print("Please adjust your config at ~/.ssh/config and run this script again.")
-    exit(1)
+    sys.exit(1)
 
 # Use organization if user selects org
 if repo_type in ["org", "organization"]:
@@ -140,7 +141,7 @@ if repo_type in ["org", "organization"]:
         organization = orgs[int(org_selection) - 1]['login']
     else:
         print("Invalid selection. Choose an organization from the list.")
-        exit(1)
+        sys.exit(1)
     logger.info("Organization: %s", organization)
     username = organization
 
@@ -153,7 +154,7 @@ create_repo = shell.run(f"gh repo create {username}/{repo_name} --{repo_visibili
 if create_repo[1]:
     logger.error("Failed to create repository")
     print(f"{ansi.red}Failed to create repository.{ansi.reset} Please check the error message above and try again.")
-    exit(1)
+    sys.exit(1)
 
 # Configure git for the new repository
 os.chdir(repo_name)
