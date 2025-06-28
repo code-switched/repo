@@ -8,9 +8,14 @@ We get it. You're not just a developer; you're a developer with multiple persona
 
 ## Features That'll Make You Go "Zoom Zoom"
 
-- **repo_new.py**: Create a new GitHub repo faster than you can say "git init"
-- **repo_existing.py**: Clone an existing repo with less friction than a greased-up bobsled
-- **ssh_setup.py**: Set up SSH keys so securely, even your paranoid alter ego will be impressed
+### 🚀 Repository Creation & Management
+- **repo_new.py**: Create a brand new GitHub repository, clone it locally, and set up all your git configuration with SSH signing in one go
+- **repo_existing_hub.py**: Get access to an existing private repository with proper SSH setup and collaborator permissions
+- **repo_started_local.py**: Turn your existing local project into a GitHub repository and push it to the cloud
+
+### 🔐 Security & Authentication  
+- **ssh_setup.py**: Generate SSH keys, configure GitHub authentication, and test connections like a security pro
+
 
 ## No Dependencies, No Cry
 
@@ -29,6 +34,14 @@ We believe in magic, not dependencies. This repo works out of the box, no pip in
 - Reduce setup errors (blame the script, not yourself)
 - Manage multiple identities effortlessly (superhero costume changes optional)
 - Impress your colleagues with your lightning-fast project setups
+
+## Requirements
+
+- Python 3.x
+- Git
+- GitHub CLI (`gh`)
+- SSH key pair (scripts can help generate if needed)
+- GitHub account with appropriate permissions
 
 ## Remember
 
