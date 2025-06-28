@@ -13,11 +13,13 @@ def execute(command):
     """
     - Run a command and return the output and error
     - The command's output and error streams are connected to pipes.
-    - Output is not displayed in real-time; it's collected and can be processed after the command finishes.
+    - Output is not displayed in real-time
+        it's collected and can be processed after the command finishes
     - This means that the command will not block the parent process.
-    - This is useful for commands that need to be run in the background, such as long-running commands.
+    - This is useful for commands that need to be run in the background,
+        such as long-running commands.
     """
-    logging.info(f"Executing command: {command}")
+    logging.info("Executing command: %s", command)
     print(f"\n{ansi.grey}{command}{ansi.reset}")
     process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     output_bytes, error_bytes = process.communicate()
@@ -40,10 +42,11 @@ def run(command):
     - The command's output and error streams are connected directly to the parent process's streams.
     - Output is displayed in real-time as the command executes.
     - This means that the command will block the parent process until it finishes.
-    - This is useful for commands that need to be run in the foreground, such as interactive commands.
-    - The function allows for interactive use, where the user can see and potentially respond to output as it's generated.
+    - This is useful for commands that need to be run in foreground, such as interactive commands.
+    - The function allows for interactive use, where the user can see and potentially respond
+        to outputas it's generated.
     """
-    logging.info(f"Executing command: {command}")
+    logging.info("Executing command: %s", command)
     print(f"\n{ansi.grey}{command}{ansi.reset}")
     process = subprocess.Popen(command, shell=True)
     output_bytes, error_bytes = process.communicate()
