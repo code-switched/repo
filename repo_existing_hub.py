@@ -55,7 +55,7 @@ logger.info("Organization: %s, Repo name: %s", organization, repo_name)
 
 if username != organization:
     # Check if the user has permissions for the repo
-    repo_permissions = input(f"Do you have permissions as {ansi.cyan}{username}{ansi.reset} to access the {ansi.red}{organization}{ansi.reset} repo? (y/n): ")
+    repo_permissions = input(f"Do you have permissions as {ansi.cyan}{username}{ansi.reset} to access the {ansi.red}{organization}{ansi.reset} repo? (y/N): ")
     logger.info("User repo_permissions: %s", repo_permissions)
     if repo_permissions.lower() not in ["y", "yes"]:
         logger.warning("Repo permissions: %s", repo_permissions)
@@ -109,7 +109,7 @@ ssh_host = input(f"{ansi.grey} > {ansi.reset}") or f"{username}.github.com"
 logger.info("SSH host: %s", ssh_host)
 
 # Check if the user has added their SSH key to GitHub
-key_added = input(f"Have you added your SSH key to GitHub? {ansi.yellow}This is the last step.{ansi.reset} (y/n): ")
+key_added = input(f"Have you added your SSH key to GitHub? {ansi.yellow}This is the last step.{ansi.reset} (y/N): ")
 logger.info("User key_added: %s", key_added)
 if key_added.lower() not in ["y", "yes"]:
     print("Please add your SSH key to GitHub and try again")

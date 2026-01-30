@@ -113,13 +113,14 @@ input(f"This will log you in. Press {ansi.green}Enter{ansi.reset} to continue...
 # Check gh auth status and log out if necessary
 print("Checking auth status...")
 auth_status = shell.run("gh auth status")
+shell.run("gh auth logout")
 
 # Authorize gh-cli with ssh key
 shell.run("gh auth login --git-protocol ssh --hostname github.com --web")
 shell.run("gh auth status")
 shell.run("gh repo list")
 
-config_familiar = input("\nIs the above configuration familiar? (y/n): ")
+config_familiar = input("\nIs the above configuration familiar? (y/N): ")
 logger.info("User config_familiar response: %s", config_familiar)
 if config_familiar.lower() not in ["y", "yes"]:
     logger.warning("User indicated unfamiliar configuration")
