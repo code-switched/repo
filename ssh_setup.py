@@ -98,7 +98,7 @@ def handle_existing_keys(public_keys):
     for i, key in enumerate(public_keys, 1):
         print(f"{ansi.yellow}{i}.{ansi.reset} {os.path.basename(key)}")
 
-    if input("Do you want to make a new key? (y/n): ").lower() == 'y':
+    if input("Do you want to make a new key? (y/N): ").lower() in ['y', 'yes']:
         return generate_ssh_key()
 
     selection = input("Enter the number of the key you want to use: ")
