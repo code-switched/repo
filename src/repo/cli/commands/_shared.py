@@ -126,3 +126,25 @@ def parse_repo_coordinates(repo_url: str) -> tuple[str, str]:
         raise CommandError("Unable to parse repository owner/name from URL")
 
     return parts[0], parts[1]
+
+
+def print_section(title: str) -> None:
+    """Print a visually distinct section heading."""
+    print(f"\n{ansi.sage}{title}{ansi.reset}")
+
+
+def print_summary(title: str, rows: list[tuple[str, str]]) -> None:
+    """Render a compact key/value summary block."""
+    print_section(title)
+    for label, value in rows:
+        print(f"  {ansi.cyan}{label:<16}{ansi.reset} {value}")
+
+
+def confirm_proceed(message: str = "Proceed with these actions?") -> bool:
+    """Prompt for explicit confirmation with safe default of no."""
+    response = input(
+        f"{ansi.yellow}{message} [y/N]: {ansi.reset}"
+    ).strip().lower()
+    if not response:
+        return False
+    return response in YES_VALUES

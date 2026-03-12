@@ -12,8 +12,11 @@ from ...core.exceptions import CommandError
 from ...core.github import create_github_api, create_repository, list_authenticated_orgs
 from ._shared import (
     YES_VALUES,
+    confirm_proceed,
     normalize_repo_type,
     normalize_visibility,
+    print_section,
+    print_summary,
     prompt_required,
     prompt_ssh_key,
     prompt_with_default,
@@ -49,6 +52,11 @@ def register_new_command(subparsers: argparse._SubParsersAction) -> None:
         action="store_true",
         help="Require flags instead of prompts",
     )
+    parser.add_argument(
+        "--yes",
+        action="store_true",
+        help="Skip preflight confirmation prompt",
+    )
     parser.add_argument("--repo-parent-folder", help="Local parent folder for the repo")
     parser.add_argument("--repo-name", help="Repository name")
     parser.add_argument("--branch", help="Git branch name (default: main)")
@@ -71,11 +79,32 @@ def run_new(args: argparse.Namespace) -> None:
     """Execute `repo new`."""
     inputs = collect_new_inputs(args)
     owner = inputs.owner
+    owner_display = owner or (
+        inputs.username if inputs.repo_type == "user" else "(select org during run)"
+    )
+
+    print_summary(
+        "Preflight Summary",
+        [
+            ("Command", "repo new"),
+            ("Repo Name", inputs.repo_name),
+            ("Owner Type", inputs.repo_type),
+            ("Owner", owner_display),
+            ("Visibility", inputs.repo_visibility),
+            ("Branch", inputs.git_repo_branch),
+            ("Target Dir", str(inputs.repo_parent_folder)),
+            ("SSH Host", inputs.ssh_host),
+            ("Mode", "dry-run" if args.dry_run else "execute"),
+        ],
+    )
+    if not args.non_interactive and not args.yes and not confirm_proceed():
+        raise CommandError("Operation cancelled by user")
 
     try:
         inputs.repo_parent_folder.mkdir(parents=True, exist_ok=True)
 
         if not args.non_interactive:
+            print_section("Authentication")
             print("Open the browser profile associated with this GitHub account")
             input(f"This will log you in. Press {ansi.green}Enter{ansi.reset} to continue...")
 
@@ -134,6 +163,7 @@ def run_new(args: argparse.Namespace) -> None:
             raise CommandError("Unable to resolve repository owner")
 
         remote_url = f"git@{inputs.ssh_host}:{owner}/{inputs.repo_name}.git"
+        print_section("Repository")
 
         if args.dry_run:
             print(
@@ -155,7 +185,10 @@ def run_new(args: argparse.Namespace) -> None:
             subprocess.run(clone_cmd, cwd=inputs.repo_parent_folder, check=True)
 
         repo_path = inputs.repo_parent_folder / inputs.repo_name
+        if not args.dry_run and not repo_path.exists():
+            repo_path.mkdir(parents=True, exist_ok=True)
 
+        print_section("Git Configuration")
         signing_key_cmd = ["git", "config", "user.signingkey", inputs.ssh_key]
         print(f"\n{ansi.grey}{' '.join(signing_key_cmd)}{ansi.reset}")
         if not args.dry_run:
@@ -201,6 +234,7 @@ def run_new(args: argparse.Namespace) -> None:
         if not args.dry_run:
             subprocess.run(checkout_cmd, cwd=repo_path, check=True)
 
+        print_section("Initial Commit")
         if args.dry_run:
             print(
                 f"\n{ansi.yellow}[dry-run]{ansi.reset} would create "

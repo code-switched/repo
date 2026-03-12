@@ -11,7 +11,10 @@ from ..console import ansi
 from ...core.exceptions import CommandError
 from ._shared import (
     YES_VALUES,
+    confirm_proceed,
     parse_repo_coordinates,
+    print_section,
+    print_summary,
     prompt_required,
     prompt_ssh_key,
     prompt_with_default,
@@ -44,6 +47,11 @@ def register_existing_command(subparsers: argparse._SubParsersAction) -> None:
         action="store_true",
         help="Require flags instead of prompts",
     )
+    parser.add_argument(
+        "--yes",
+        action="store_true",
+        help="Skip preflight confirmation prompt",
+    )
     parser.add_argument("--username", help="GitHub username")
     parser.add_argument("--repo-url", help="Repository URL (HTTPS or SSH)")
     parser.add_argument("--branch", help="Git branch name (default: main)")
@@ -64,6 +72,23 @@ def run_existing(args: argparse.Namespace) -> None:
     """Execute `repo existing`."""
     inputs = collect_existing_inputs(args)
     organization, repo_name = parse_repo_coordinates(inputs.git_repo_url)
+    repo_path = inputs.repo_parent_folder / repo_name
+
+    print_summary(
+        "Preflight Summary",
+        [
+            ("Command", "repo existing"),
+            ("Repo URL", inputs.git_repo_url),
+            ("Owner", organization),
+            ("Repo Name", repo_name),
+            ("Branch", inputs.git_repo_branch),
+            ("Target Dir", str(repo_path)),
+            ("SSH Host", inputs.ssh_host),
+            ("Mode", "dry-run" if args.dry_run else "execute"),
+        ],
+    )
+    if not args.non_interactive and not args.yes and not confirm_proceed():
+        raise CommandError("Operation cancelled by user")
 
     if inputs.username != organization and not args.confirm_permissions:
         if args.non_interactive:
@@ -82,9 +107,8 @@ def run_existing(args: argparse.Namespace) -> None:
                 "Please ask the repo owner to add you as a collaborator and try again"
             )
 
-    repo_path = inputs.repo_parent_folder / repo_name
-
     try:
+        print_section("Workspace")
         if args.dry_run:
             print(f"\n{ansi.yellow}[dry-run]{ansi.reset} would create {repo_path}")
         else:
@@ -95,6 +119,7 @@ def run_existing(args: argparse.Namespace) -> None:
         if not args.dry_run:
             subprocess.run(init_cmd, cwd=repo_path, check=True)
 
+        print_section("Git Configuration")
         user_name_cmd = ["git", "config", "user.name", inputs.git_name]
         print(f"\n{ansi.grey}{' '.join(user_name_cmd)}{ansi.reset}")
         if not args.dry_run:
@@ -154,6 +179,7 @@ def run_existing(args: argparse.Namespace) -> None:
         if not args.dry_run:
             subprocess.run(ssh_test_cmd, check=False)
 
+        print_section("Remote Setup")
         remote_url = f"git@{inputs.ssh_host}:{organization}/{repo_name}.git"
         remove_origin_cmd = ["git", "remote", "remove", "origin"]
         print(f"\n{ansi.grey}{' '.join(remove_origin_cmd)}{ansi.reset}")

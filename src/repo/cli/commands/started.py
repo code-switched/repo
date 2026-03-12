@@ -12,9 +12,11 @@ from ..console import ansi
 from ...core.exceptions import CommandError
 from ...core.github import create_github_api, create_repository, list_authenticated_orgs
 from ._shared import (
-    YES_VALUES,
+    confirm_proceed,
     normalize_repo_type,
     normalize_visibility,
+    print_section,
+    print_summary,
     prompt_required,
     prompt_ssh_key,
     prompt_with_default,
@@ -49,6 +51,11 @@ def register_started_command(subparsers: argparse._SubParsersAction) -> None:
         action="store_true",
         help="Require flags instead of prompts",
     )
+    parser.add_argument(
+        "--yes",
+        action="store_true",
+        help="Skip preflight confirmation prompt",
+    )
     parser.add_argument("--project-path", help="Path to existing project")
     parser.add_argument("--repo-name", help="Override repository name")
     parser.add_argument("--repo-type", choices=["user", "org"], help="Owner type")
@@ -70,9 +77,29 @@ def run_started(args: argparse.Namespace) -> None:
     """Execute `repo started`."""
     inputs = collect_started_inputs(args)
     owner = inputs.owner
+    owner_display = owner or (
+        inputs.username if inputs.repo_type == "user" else "(select org during run)"
+    )
+
+    print_summary(
+        "Preflight Summary",
+        [
+            ("Command", "repo started"),
+            ("Project Path", str(inputs.project_path)),
+            ("Repo Name", inputs.repo_name),
+            ("Owner Type", inputs.repo_type),
+            ("Owner", owner_display),
+            ("Visibility", inputs.repo_visibility),
+            ("SSH Host", inputs.ssh_host),
+            ("Mode", "dry-run" if args.dry_run else "execute"),
+        ],
+    )
+    if not args.non_interactive and not args.yes and not confirm_proceed():
+        raise CommandError("Operation cancelled by user")
 
     try:
         if not args.non_interactive:
+            print_section("Authentication")
             print("Open the browser profile associated with this GitHub account")
             input(f"This will log you in. Press {ansi.green}Enter{ansi.reset} to continue...")
 
@@ -126,6 +153,7 @@ def run_started(args: argparse.Namespace) -> None:
         if not owner:
             raise CommandError("Unable to resolve repository owner")
 
+        print_section("Repository")
         if args.dry_run:
             print(
                 f"\n{ansi.yellow}[dry-run]{ansi.reset} would create "
@@ -145,6 +173,7 @@ def run_started(args: argparse.Namespace) -> None:
         else:
             os.chdir(inputs.project_path)
 
+        print_section("Git Configuration")
         if not (inputs.project_path / ".git").exists():
             init_cmd = ["git", "init"]
             print(f"\n{ansi.grey}{' '.join(init_cmd)}{ansi.reset}")
@@ -197,6 +226,7 @@ def run_started(args: argparse.Namespace) -> None:
         if not args.dry_run:
             subprocess.run(add_origin_cmd, cwd=inputs.project_path, check=True)
 
+        print_section("Initial Commit")
         status_cmd = ["git", "status", "--porcelain"]
         print(f"\n{ansi.grey}{' '.join(status_cmd)}{ansi.reset}")
         status_output = ""

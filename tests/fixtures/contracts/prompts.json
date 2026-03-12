@@ -30,18 +30,33 @@
     "<GREY> > <RESET>"
   ],
   "run_new_interactive": [
+    "<YELLOW>Proceed with these actions? [y/N]: <RESET>",
     "This will log you in. Press <GREEN>Enter<RESET> to continue...",
     "\nIs the above configuration familiar? (y/N): "
   ],
   "run_existing_interactive": [
+    "<YELLOW>Proceed with these actions? [y/N]: <RESET>",
     "Do you have permissions as <CYAN>testuser<RESET> to access the <RED>owner<RESET> repo? (y/N): ",
     "Have you added your SSH key to GitHub? <YELLOW>This is the last step.<RESET> (y/N): "
   ],
   "run_started_interactive": [
+    "<YELLOW>Proceed with these actions? [y/N]: <RESET>",
     "This will log you in. Press <GREEN>Enter<RESET> to continue..."
   ],
   "run_ssh_interactive": [
+    "<YELLOW>Proceed with these actions? [y/N]: <RESET>",
     "Are you sure you want to <YELLOW>generate a key<RESET>? (y/N): ",
     "\nPress <GREEN>Enter<RESET> when you've added the key to GitHub..."
+  ],
+  "run_new_org_interactive": [
+    "<YELLOW>Proceed with these actions? [y/N]: <RESET>",
+    "This will log you in. Press <GREEN>Enter<RESET> to continue...",
+    "\nIs the above configuration familiar? (y/N): ",
+    "Select the organization by number: "
+  ],
+  "run_started_org_interactive": [
+    "<YELLOW>Proceed with these actions? [y/N]: <RESET>",
+    "This will log you in. Press <GREEN>Enter<RESET> to continue...",
+    "Select the organization by number: "
   ]
 }

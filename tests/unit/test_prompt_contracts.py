@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 from argparse import Namespace
 from pathlib import Path
 
@@ -195,12 +196,13 @@ def test_collect_started_prompt_flow_matches_contract(monkeypatch, tmp_path: Pat
 def test_run_new_prompt_flow_matches_contract(monkeypatch, tmp_path: Path) -> None:
     """`run_new` should keep login confirmation prompts in interactive mode."""
     contracts = load_prompt_contracts()
-    recorder = InputRecorder(["", "y"])
+    recorder = InputRecorder(["y", "", "y"])
     monkeypatch.setattr("builtins.input", recorder)
 
     args = Namespace(
         dry_run=True,
         non_interactive=False,
+        yes=False,
         repo_parent_folder=str(tmp_path / "repos"),
         repo_name="demo",
         branch="main",
@@ -224,12 +226,13 @@ def test_run_new_prompt_flow_matches_contract(monkeypatch, tmp_path: Path) -> No
 def test_run_existing_prompt_flow_matches_contract(monkeypatch, tmp_path: Path) -> None:
     """`run_existing` should keep permission and key prompts in interactive mode."""
     contracts = load_prompt_contracts()
-    recorder = InputRecorder(["y", "y"])
+    recorder = InputRecorder(["y", "y", "y"])
     monkeypatch.setattr("builtins.input", recorder)
 
     args = Namespace(
         dry_run=True,
         non_interactive=False,
+        yes=False,
         username="testuser",
         repo_url="https://github.com/owner/demo.git",
         branch="main",
@@ -251,12 +254,13 @@ def test_run_existing_prompt_flow_matches_contract(monkeypatch, tmp_path: Path) 
 def test_run_started_prompt_flow_matches_contract(monkeypatch, tmp_path: Path) -> None:
     """`run_started` should keep login confirmation prompt in interactive mode."""
     contracts = load_prompt_contracts()
-    recorder = InputRecorder([""])
+    recorder = InputRecorder(["y", ""])
     monkeypatch.setattr("builtins.input", recorder)
 
     args = Namespace(
         dry_run=True,
         non_interactive=False,
+        yes=False,
         project_path=str(tmp_path),
         repo_name="demo",
         repo_type="user",
@@ -279,12 +283,13 @@ def test_run_started_prompt_flow_matches_contract(monkeypatch, tmp_path: Path) -
 def test_run_ssh_prompt_flow_matches_contract(monkeypatch) -> None:
     """`run_ssh` should keep generation and final confirmation prompts."""
     contracts = load_prompt_contracts()
-    recorder = InputRecorder(["y", ""])
+    recorder = InputRecorder(["y", "y", ""])
     monkeypatch.setattr("builtins.input", recorder)
 
     args = Namespace(
         dry_run=True,
         non_interactive=False,
+        yes=False,
         account_name="testuser",
         email="test@example.com",
         machine_name="machine",
@@ -296,4 +301,83 @@ def test_run_ssh_prompt_flow_matches_contract(monkeypatch) -> None:
     recorder.assert_exhausted()
 
     expected = expand_prompts(contracts["run_ssh_interactive"])
+    assert recorder.prompts == expected
+
+
+def test_run_new_org_prompt_flow_matches_contract(monkeypatch, tmp_path: Path) -> None:
+    """`run_new` should prompt for org selection in org mode."""
+    contracts = load_prompt_contracts()
+    recorder = InputRecorder(["y", "", "y", "1"])
+    monkeypatch.setattr("builtins.input", recorder)
+
+    def fake_run(command, **_kwargs):  # noqa: ANN001
+        return subprocess.CompletedProcess(args=command, returncode=0, stdout="", stderr="")
+
+    monkeypatch.setattr(new_command.subprocess, "run", fake_run)
+    monkeypatch.setattr(new_command, "create_github_api", lambda: object())
+    monkeypatch.setattr(new_command, "create_repository", lambda **_kwargs: None)
+    monkeypatch.setattr(new_command, "list_authenticated_orgs", lambda _api: ["acme"])
+
+    args = Namespace(
+        dry_run=False,
+        non_interactive=False,
+        yes=False,
+        repo_parent_folder=str(tmp_path / "repos"),
+        repo_name="demo",
+        branch="main",
+        repo_type="org",
+        visibility="private",
+        username="testuser",
+        git_name="Test User",
+        git_email="test@example.com",
+        ssh_key="~/.ssh/id_ed25519_testuser.pub",
+        ssh_host="testuser.github.com",
+        owner=None,
+    )
+
+    new_command.run_new(args)
+    recorder.assert_exhausted()
+
+    expected = expand_prompts(contracts["run_new_org_interactive"])
+    assert recorder.prompts == expected
+
+
+def test_run_started_org_prompt_flow_matches_contract(monkeypatch, tmp_path: Path) -> None:
+    """`run_started` should prompt for org selection in org mode."""
+    contracts = load_prompt_contracts()
+    recorder = InputRecorder(["y", "", "1"])
+    monkeypatch.setattr("builtins.input", recorder)
+
+    def fake_run(command, **_kwargs):  # noqa: ANN001
+        return subprocess.CompletedProcess(args=command, returncode=0, stdout="", stderr="")
+
+    monkeypatch.setattr(started_command.subprocess, "run", fake_run)
+    monkeypatch.setattr(started_command.os, "chdir", lambda _path: None)
+    monkeypatch.setattr(started_command, "create_github_api", lambda: object())
+    monkeypatch.setattr(started_command, "create_repository", lambda **_kwargs: None)
+    monkeypatch.setattr(started_command, "list_authenticated_orgs", lambda _api: ["acme"])
+
+    project_path = tmp_path / "project"
+    project_path.mkdir(parents=True, exist_ok=True)
+
+    args = Namespace(
+        dry_run=False,
+        non_interactive=False,
+        yes=False,
+        project_path=str(project_path),
+        repo_name="demo",
+        repo_type="org",
+        visibility="private",
+        username="testuser",
+        git_name="Test User",
+        git_email="test@example.com",
+        ssh_key="~/.ssh/id_ed25519_testuser.pub",
+        ssh_host="testuser.github.com",
+        owner=None,
+    )
+
+    started_command.run_started(args)
+    recorder.assert_exhausted()
+
+    expected = expand_prompts(contracts["run_started_org_interactive"])
     assert recorder.prompts == expected

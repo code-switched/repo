@@ -12,7 +12,14 @@ from dataclasses import dataclass
 
 from ..console import ansi
 from ...core.exceptions import CommandError
-from ._shared import YES_VALUES, prompt_required, prompt_with_default
+from ._shared import (
+    YES_VALUES,
+    confirm_proceed,
+    print_section,
+    print_summary,
+    prompt_required,
+    prompt_with_default,
+)
 
 
 @dataclass(frozen=True)
@@ -36,6 +43,11 @@ def register_ssh_command(subparsers: argparse._SubParsersAction) -> None:
         action="store_true",
         help="Require flags instead of prompts",
     )
+    parser.add_argument(
+        "--yes",
+        action="store_true",
+        help="Skip preflight confirmation prompt",
+    )
     parser.add_argument("--account-name", help="GitHub account alias for SSH host")
     parser.add_argument("--email", help="SSH key email/comment")
     parser.add_argument("--machine-name", help="Machine label for key filename")
@@ -51,9 +63,26 @@ def register_ssh_command(subparsers: argparse._SubParsersAction) -> None:
 def run_ssh(args: argparse.Namespace) -> None:
     """Execute `repo ssh`."""
     public_keys = sorted((Path.home() / ".ssh").glob("*.pub"))
+    mode = "generate" if args.generate else "reuse-or-select"
+    key_source = args.key_path if args.key_path else "(auto)"
+
+    print_summary(
+        "Preflight Summary",
+        [
+            ("Command", "repo ssh"),
+            ("Mode", mode),
+            ("Key Source", key_source),
+            ("Account", args.account_name or "(prompt/infer)"),
+            ("Dry Run", "yes" if args.dry_run else "no"),
+        ],
+    )
+    if not args.non_interactive and not args.yes and not confirm_proceed():
+        raise CommandError("Operation cancelled by user")
 
     try:
+        print_section("SSH Key Selection")
         selection = resolve_key_selection(args, public_keys)
+        print_section("SSH Config")
         update_ssh_config(selection.key_path, selection.account_name, selection.email, args.dry_run)
 
         public_key_path = Path(f"{selection.key_path}.pub")
@@ -71,6 +100,7 @@ def run_ssh(args: argparse.Namespace) -> None:
             input(f"\nPress {ansi.green}Enter{ansi.reset} when you've added the key to GitHub...")
 
         host = f"{selection.account_name}.github.com"
+        print_section("Verification")
         test_cmd = ["ssh", "-T", f"git@{host}"]
         print(f"\n{ansi.grey}{' '.join(test_cmd)}{ansi.reset}")
         if args.dry_run:
