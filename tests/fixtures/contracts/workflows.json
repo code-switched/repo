@@ -1,0 +1,52 @@
+{
+  "new_non_interactive_user": [
+    "git clone git@testuser.github.com:testuser/demo.git",
+    "git config user.signingkey ~/.ssh/id_ed25519_testuser.pub",
+    "git config gpg.format ssh",
+    "git config commit.gpgsign true",
+    "git config pull.rebase true",
+    "git config user.name Test User",
+    "git config user.email test@example.com",
+    "git remote remove origin",
+    "git remote add origin git@testuser.github.com:testuser/demo.git",
+    "git checkout -B main",
+    "git add .",
+    "git commit -m chore: init",
+    "git push -u origin main"
+  ],
+  "existing_non_interactive": [
+    "git init",
+    "git config user.name Test User",
+    "git config user.email test@example.com",
+    "git config user.signingkey ~/.ssh/id_ed25519_testuser.pub",
+    "git config gpg.format ssh",
+    "git config commit.gpgsign true",
+    "git config pull.rebase true",
+    "ssh -T git@testuser.github.com",
+    "git remote remove origin",
+    "git remote add origin git@testuser.github.com:testuser/demo.git",
+    "git fetch origin",
+    "git checkout -B main origin/main",
+    "git pull"
+  ],
+  "started_non_interactive_dirty": [
+    "git init",
+    "git config user.name Test User",
+    "git config user.email test@example.com",
+    "git config user.signingkey ~/.ssh/id_ed25519_testuser.pub",
+    "git config gpg.format ssh",
+    "git config commit.gpgsign true",
+    "git config pull.rebase true",
+    "git checkout -B main",
+    "git remote remove origin",
+    "git remote add origin git@testuser.github.com:testuser/demo.git",
+    "git status --porcelain",
+    "git add .",
+    "git commit -m chore: init",
+    "git push -u origin main"
+  ],
+  "ssh_non_interactive_generate": [
+    "ssh-keygen -t ed25519 -f <HOME>/.ssh/id_ed25519_machine_testuser -C test@example.com -N \"\"",
+    "ssh -T git@testuser.github.com"
+  ]
+}
