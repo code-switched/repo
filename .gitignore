@@ -1,5 +1,6 @@
 # Custom Folders
 venv*/
+.worktrees/
 
 # Custom Extensions
 *.log.*
