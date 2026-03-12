@@ -1,0 +1,26 @@
+{
+  "subcommands": [
+    "new",
+    "existing",
+    "started",
+    "ssh"
+  ],
+  "command_flags": {
+    "new": [
+      "--dry-run",
+      "--non-interactive"
+    ],
+    "existing": [
+      "--dry-run",
+      "--non-interactive"
+    ],
+    "started": [
+      "--dry-run",
+      "--non-interactive"
+    ],
+    "ssh": [
+      "--dry-run",
+      "--non-interactive"
+    ]
+  }
+}

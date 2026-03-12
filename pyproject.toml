@@ -8,7 +8,9 @@ version = "0.1.0"
 description = ""
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "ghapi>=1.0.8",
+]
 
 [project.optional-dependencies]
 dev = [

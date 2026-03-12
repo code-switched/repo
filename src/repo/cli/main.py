@@ -1,17 +1,19 @@
 """Main CLI dispatcher."""
 
+import sys
 import argparse
 
+from .console import ansi
 from .commands import register_commands
 from .console.helpfmt import ColoredHelpFormatter
-from ..core.exceptions import CommandError
+from ..core.exceptions import AppError, CommandError
 
 
 def build_parser() -> argparse.ArgumentParser:
     """Build the argument parser."""
     parser = argparse.ArgumentParser(
         prog="repo",
-        description="<description>",
+        description="Repository setup and SSH workflows",
         formatter_class=ColoredHelpFormatter,
     )
     parser.add_argument(
@@ -35,7 +37,11 @@ def main(argv: list[str] | None = None) -> None:
     if not hasattr(args, "func"):
         raise CommandError("No handler registered for command")
 
-    args.func(args)
+    try:
+        args.func(args)
+    except AppError as exc:
+        print(f"{ansi.red}Error:{ansi.reset} {exc}", file=sys.stderr)
+        raise SystemExit(1) from exc
 
 
 if __name__ == "__main__":
