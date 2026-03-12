@@ -1,0 +1,47 @@
+{
+  "collect_new_interactive": [
+    " > ",
+    "Enter the name of the new repo: ",
+    "Enter git repo branch: <GREY>(default: main)<RESET> ",
+    "Is this repo for an organization or a user? (<CYAN>user<RESET> / <MAGENTA>org<RESET>): <GREY>(default: user)<RESET> ",
+    "Enter repo visibility (<CYAN>public<RESET> / <MAGENTA>private<RESET>): <GREY>(default: private)<RESET> ",
+    "Enter your GitHub username: ",
+    "Enter git name: ",
+    "Enter git email: ",
+    "<GREY> > <RESET>"
+  ],
+  "collect_existing_interactive": [
+    "Enter your GitHub username: ",
+    "Enter git repo url: ",
+    "Enter git repo branch: <GREY>(default: main)<RESET> ",
+    "Enter git name: ",
+    "Enter git email: ",
+    " > ",
+    "<GREY> > <RESET>"
+  ],
+  "collect_started_interactive": [
+    " > ",
+    "Press Enter to keep or type new name: <GREY>(default: <PROJECT_NAME>)<RESET> ",
+    "Is this repo for an organization or a user? (<CYAN>user<RESET> / <MAGENTA>org<RESET>): <GREY>(default: user)<RESET> ",
+    "Enter repo visibility (<CYAN>public<RESET> / <MAGENTA>private<RESET>): <GREY>(default: private)<RESET> ",
+    "Enter your GitHub username: ",
+    "Enter git name: ",
+    "Enter git email: ",
+    "<GREY> > <RESET>"
+  ],
+  "run_new_interactive": [
+    "This will log you in. Press <GREEN>Enter<RESET> to continue...",
+    "\nIs the above configuration familiar? (y/N): "
+  ],
+  "run_existing_interactive": [
+    "Do you have permissions as <CYAN>testuser<RESET> to access the <RED>owner<RESET> repo? (y/N): ",
+    "Have you added your SSH key to GitHub? <YELLOW>This is the last step.<RESET> (y/N): "
+  ],
+  "run_started_interactive": [
+    "This will log you in. Press <GREEN>Enter<RESET> to continue..."
+  ],
+  "run_ssh_interactive": [
+    "Are you sure you want to <YELLOW>generate a key<RESET>? (y/N): ",
+    "\nPress <GREEN>Enter<RESET> when you've added the key to GitHub..."
+  ]
+}
