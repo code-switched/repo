@@ -6,6 +6,7 @@ import re
 import socket
 import getpass
 import argparse
+import logging
 import subprocess
 from pathlib import Path
 from dataclasses import dataclass
@@ -15,11 +16,14 @@ from ...core.exceptions import CommandError
 from ._shared import (
     YES_VALUES,
     confirm_proceed,
+    log_command,
     print_section,
     print_summary,
     prompt_required,
     prompt_with_default,
 )
+
+logger = logging.getLogger("repo.cli.commands.ssh")
 
 
 @dataclass(frozen=True)
@@ -65,6 +69,14 @@ def run_ssh(args: argparse.Namespace) -> None:
     public_keys = sorted((Path.home() / ".ssh").glob("*.pub"))
     mode = "generate" if args.generate else "reuse-or-select"
     key_source = args.key_path if args.key_path else "(auto)"
+    logger.info(
+        "workflow_start command=repo ssh mode=%s key_source=%s account=%s dry_run=%s non_interactive=%s",
+        mode,
+        key_source,
+        args.account_name or "",
+        args.dry_run,
+        args.non_interactive,
+    )
 
     print_summary(
         "Preflight Summary",
@@ -102,6 +114,7 @@ def run_ssh(args: argparse.Namespace) -> None:
         host = f"{selection.account_name}.github.com"
         print_section("Verification")
         test_cmd = ["ssh", "-T", f"git@{host}"]
+        log_command(logger, test_cmd, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(test_cmd)}{ansi.reset}")
         if args.dry_run:
             print(f"{ansi.yellow}[dry-run]{ansi.reset} would test SSH connection")
@@ -114,16 +127,20 @@ def run_ssh(args: argparse.Namespace) -> None:
             )
             combined_output = f"{result.stdout}\n{result.stderr}"
             if "successfully authenticated" in combined_output:
+                logger.info("workflow_complete command=repo ssh host=%s", host)
                 print(f"{ansi.green}SSH setup completed successfully!{ansi.reset}")
             else:
+                logger.warning("workflow_verification_failed command=repo ssh host=%s", host)
                 print(f"{ansi.red}SSH setup failed. Please check your configuration and try again.{ansi.reset}")
 
         print(f"\n{ansi.yellow}Reminder:{ansi.reset} Please reorganize your ~/.ssh/config file as needed.")
     except subprocess.CalledProcessError as exc:
         command = exc.cmd if isinstance(exc.cmd, str) else " ".join(exc.cmd)
+        logger.error("workflow_failed command=repo ssh subprocess=%s", command)
         raise CommandError(f"Command failed ({exc.returncode}): {command}") from exc
     except FileNotFoundError as exc:
         executable = exc.filename or "unknown executable"
+        logger.error("workflow_failed command=repo ssh executable=%s", executable)
         raise CommandError(f"Required executable not found: {executable}") from exc
 
 
@@ -218,6 +235,7 @@ def generate_ssh_key(args: argparse.Namespace) -> SshSelection:
         "-N",
         "",
     ]
+    log_command(logger, keygen_cmd, dry_run=args.dry_run)
     print(f"\n{ansi.grey}{' '.join(keygen_cmd)}{ansi.reset}")
     if not args.dry_run:
         key_path.parent.mkdir(parents=True, exist_ok=True)
@@ -278,10 +296,12 @@ def update_ssh_config(
     )
 
     if dry_run:
+        logger.info("ssh_config_update path=%s host=%s dry_run=%s", config_path, host, dry_run)
         print(f"\n{ansi.yellow}[dry-run]{ansi.reset} would append to {config_path}:")
         print(config_entry)
         return
 
+    logger.info("ssh_config_update path=%s host=%s dry_run=%s", config_path, host, dry_run)
     config_path.parent.mkdir(parents=True, exist_ok=True)
     with config_path.open("a", encoding="utf-8") as handle:
         handle.write(config_entry)

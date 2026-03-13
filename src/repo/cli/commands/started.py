@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import argparse
+import logging
 import subprocess
 from pathlib import Path
 from dataclasses import dataclass
@@ -20,12 +21,15 @@ from ._shared import (
     confirm_proceed,
     normalize_repo_type,
     normalize_visibility,
+    log_command,
     print_section,
     print_summary,
     prompt_required,
     prompt_ssh_key,
     prompt_with_default,
 )
+
+logger = logging.getLogger("repo.cli.commands.started")
 
 
 @dataclass(frozen=True)
@@ -81,6 +85,17 @@ def register_started_command(subparsers: argparse._SubParsersAction) -> None:
 def run_started(args: argparse.Namespace) -> None:
     """Execute `repo started`."""
     inputs = collect_started_inputs(args)
+    logger.info(
+        "workflow_start command=repo started project_path=%s repo_name=%s repo_type=%s "
+        "visibility=%s username=%s dry_run=%s non_interactive=%s",
+        inputs.project_path,
+        inputs.repo_name,
+        inputs.repo_type,
+        inputs.repo_visibility,
+        inputs.username,
+        args.dry_run,
+        args.non_interactive,
+    )
     owner = inputs.owner
     owner_display = owner or (
         inputs.username if inputs.repo_type == "user" else "(select org during run)"
@@ -113,11 +128,13 @@ def run_started(args: argparse.Namespace) -> None:
                     f"for {inputs.username}"
                 )
             else:
+                def print_and_log_auth_command(command: list[str]) -> None:
+                    log_command(logger, command, dry_run=args.dry_run)
+                    print(f"\n{ansi.grey}{' '.join(command)}{ansi.reset}")
+
                 ensure_github_auth_for_user(
                     inputs.username,
-                    command_logger=lambda cmd: print(
-                        f"\n{ansi.grey}{' '.join(cmd)}{ansi.reset}"
-                    ),
+                    command_logger=print_and_log_auth_command,
                 )
 
         api = None
@@ -136,13 +153,28 @@ def run_started(args: argparse.Namespace) -> None:
         if not owner:
             raise CommandError("Unable to resolve repository owner")
 
+        logger.info("resolved_owner owner=%s owner_type=%s", owner, inputs.repo_type)
         print_section("Repository")
         if args.dry_run:
+            logger.info(
+                "repository_create owner=%s repo_name=%s visibility=%s dry_run=%s",
+                owner,
+                inputs.repo_name,
+                inputs.repo_visibility,
+                args.dry_run,
+            )
             print(
                 f"\n{ansi.yellow}[dry-run]{ansi.reset} would create "
                 f"{owner}/{inputs.repo_name} ({inputs.repo_visibility})"
             )
         else:
+            logger.info(
+                "repository_create owner=%s repo_name=%s visibility=%s dry_run=%s",
+                owner,
+                inputs.repo_name,
+                inputs.repo_visibility,
+                args.dry_run,
+            )
             create_repository(
                 api=api,
                 owner_type=inputs.repo_type,
@@ -159,58 +191,69 @@ def run_started(args: argparse.Namespace) -> None:
         print_section("Git Configuration")
         if not (inputs.project_path / ".git").exists():
             init_cmd = ["git", "init"]
+            log_command(logger, init_cmd, cwd=inputs.project_path, dry_run=args.dry_run)
             print(f"\n{ansi.grey}{' '.join(init_cmd)}{ansi.reset}")
             if not args.dry_run:
                 subprocess.run(init_cmd, cwd=inputs.project_path, check=True)
 
         user_name_cmd = ["git", "config", "user.name", inputs.git_name]
+        log_command(logger, user_name_cmd, cwd=inputs.project_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(user_name_cmd)}{ansi.reset}")
         if not args.dry_run:
             subprocess.run(user_name_cmd, cwd=inputs.project_path, check=True)
 
         user_email_cmd = ["git", "config", "user.email", inputs.git_email]
+        log_command(logger, user_email_cmd, cwd=inputs.project_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(user_email_cmd)}{ansi.reset}")
         if not args.dry_run:
             subprocess.run(user_email_cmd, cwd=inputs.project_path, check=True)
 
         signing_key_cmd = ["git", "config", "user.signingkey", inputs.ssh_key]
+        log_command(logger, signing_key_cmd, cwd=inputs.project_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(signing_key_cmd)}{ansi.reset}")
         if not args.dry_run:
             subprocess.run(signing_key_cmd, cwd=inputs.project_path, check=True)
 
         gpg_format_cmd = ["git", "config", "gpg.format", "ssh"]
+        log_command(logger, gpg_format_cmd, cwd=inputs.project_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(gpg_format_cmd)}{ansi.reset}")
         if not args.dry_run:
             subprocess.run(gpg_format_cmd, cwd=inputs.project_path, check=True)
 
         gpg_sign_cmd = ["git", "config", "commit.gpgsign", "true"]
+        log_command(logger, gpg_sign_cmd, cwd=inputs.project_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(gpg_sign_cmd)}{ansi.reset}")
         if not args.dry_run:
             subprocess.run(gpg_sign_cmd, cwd=inputs.project_path, check=True)
 
         pull_rebase_cmd = ["git", "config", "pull.rebase", "true"]
+        log_command(logger, pull_rebase_cmd, cwd=inputs.project_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(pull_rebase_cmd)}{ansi.reset}")
         if not args.dry_run:
             subprocess.run(pull_rebase_cmd, cwd=inputs.project_path, check=True)
 
         checkout_cmd = ["git", "checkout", "-B", "main"]
+        log_command(logger, checkout_cmd, cwd=inputs.project_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(checkout_cmd)}{ansi.reset}")
         if not args.dry_run:
             subprocess.run(checkout_cmd, cwd=inputs.project_path, check=True)
 
         remote_url = f"git@{inputs.ssh_host}:{owner}/{inputs.repo_name}.git"
         remove_origin_cmd = ["git", "remote", "remove", "origin"]
+        log_command(logger, remove_origin_cmd, cwd=inputs.project_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(remove_origin_cmd)}{ansi.reset}")
         if not args.dry_run:
             subprocess.run(remove_origin_cmd, cwd=inputs.project_path, check=False)
 
         add_origin_cmd = ["git", "remote", "add", "origin", remote_url]
+        log_command(logger, add_origin_cmd, cwd=inputs.project_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(add_origin_cmd)}{ansi.reset}")
         if not args.dry_run:
             subprocess.run(add_origin_cmd, cwd=inputs.project_path, check=True)
 
         print_section("Initial Commit")
         status_cmd = ["git", "status", "--porcelain"]
+        log_command(logger, status_cmd, cwd=inputs.project_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(status_cmd)}{ansi.reset}")
         status_output = ""
         if not args.dry_run:
@@ -225,26 +268,32 @@ def run_started(args: argparse.Namespace) -> None:
 
         if args.dry_run or status_output:
             add_cmd = ["git", "add", "."]
+            log_command(logger, add_cmd, cwd=inputs.project_path, dry_run=args.dry_run)
             print(f"\n{ansi.grey}{' '.join(add_cmd)}{ansi.reset}")
             if not args.dry_run:
                 subprocess.run(add_cmd, cwd=inputs.project_path, check=True)
 
             commit_cmd = ["git", "commit", "-m", "chore: init"]
+            log_command(logger, commit_cmd, cwd=inputs.project_path, dry_run=args.dry_run)
             print(f"\n{ansi.grey}{' '.join(commit_cmd)}{ansi.reset}")
             if not args.dry_run:
                 subprocess.run(commit_cmd, cwd=inputs.project_path, check=True)
 
         push_cmd = ["git", "push", "-u", "origin", "main"]
+        log_command(logger, push_cmd, cwd=inputs.project_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(push_cmd)}{ansi.reset}")
         if not args.dry_run:
             subprocess.run(push_cmd, cwd=inputs.project_path, check=True)
 
+        logger.info("workflow_complete command=repo started repo_name=%s", inputs.repo_name)
         print(f"\n{ansi.green}Repository setup complete!{ansi.reset}")
     except subprocess.CalledProcessError as exc:
         command = exc.cmd if isinstance(exc.cmd, str) else " ".join(exc.cmd)
+        logger.error("workflow_failed command=repo started subprocess=%s", command)
         raise CommandError(f"Command failed ({exc.returncode}): {command}") from exc
     except FileNotFoundError as exc:
         executable = exc.filename or "unknown executable"
+        logger.error("workflow_failed command=repo started executable=%s", executable)
         raise CommandError(f"Required executable not found: {executable}") from exc
 
 

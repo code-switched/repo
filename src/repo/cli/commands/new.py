@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import logging
 import subprocess
 from pathlib import Path
 from dataclasses import dataclass
@@ -20,12 +21,15 @@ from ._shared import (
     confirm_proceed,
     normalize_repo_type,
     normalize_visibility,
+    log_command,
     print_section,
     print_summary,
     prompt_required,
     prompt_ssh_key,
     prompt_with_default,
 )
+
+logger = logging.getLogger("repo.cli.commands.new")
 
 
 @dataclass(frozen=True)
@@ -83,6 +87,16 @@ def register_new_command(subparsers: argparse._SubParsersAction) -> None:
 def run_new(args: argparse.Namespace) -> None:
     """Execute `repo new`."""
     inputs = collect_new_inputs(args)
+    logger.info(
+        "workflow_start command=repo new repo_name=%s repo_type=%s visibility=%s "
+        "username=%s dry_run=%s non_interactive=%s",
+        inputs.repo_name,
+        inputs.repo_type,
+        inputs.repo_visibility,
+        inputs.username,
+        args.dry_run,
+        args.non_interactive,
+    )
     owner = inputs.owner
     owner_display = owner or (
         inputs.username if inputs.repo_type == "user" else "(select org during run)"
@@ -118,11 +132,13 @@ def run_new(args: argparse.Namespace) -> None:
                     f"for {inputs.username}"
                 )
             else:
+                def print_and_log_auth_command(command: list[str]) -> None:
+                    log_command(logger, command, dry_run=args.dry_run)
+                    print(f"\n{ansi.grey}{' '.join(command)}{ansi.reset}")
+
                 ensure_github_auth_for_user(
                     inputs.username,
-                    command_logger=lambda cmd: print(
-                        f"\n{ansi.grey}{' '.join(cmd)}{ansi.reset}"
-                    ),
+                    command_logger=print_and_log_auth_command,
                 )
 
             config_familiar = input("\nIs the above configuration familiar? (y/N): ")
@@ -145,15 +161,30 @@ def run_new(args: argparse.Namespace) -> None:
         if not owner:
             raise CommandError("Unable to resolve repository owner")
 
+        logger.info("resolved_owner owner=%s owner_type=%s", owner, inputs.repo_type)
         remote_url = f"git@{inputs.ssh_host}:{owner}/{inputs.repo_name}.git"
         print_section("Repository")
 
         if args.dry_run:
+            logger.info(
+                "repository_create owner=%s repo_name=%s visibility=%s dry_run=%s",
+                owner,
+                inputs.repo_name,
+                inputs.repo_visibility,
+                args.dry_run,
+            )
             print(
                 f"\n{ansi.yellow}[dry-run]{ansi.reset} would create "
                 f"{owner}/{inputs.repo_name} ({inputs.repo_visibility})"
             )
         else:
+            logger.info(
+                "repository_create owner=%s repo_name=%s visibility=%s dry_run=%s",
+                owner,
+                inputs.repo_name,
+                inputs.repo_visibility,
+                args.dry_run,
+            )
             create_repository(
                 api=api,
                 owner_type=inputs.repo_type,
@@ -163,6 +194,12 @@ def run_new(args: argparse.Namespace) -> None:
             )
 
         clone_cmd = ["git", "clone", remote_url]
+        log_command(
+            logger,
+            clone_cmd,
+            cwd=inputs.repo_parent_folder,
+            dry_run=args.dry_run,
+        )
         print(f"\n{ansi.grey}{' '.join(clone_cmd)}{ansi.reset}")
         if not args.dry_run:
             subprocess.run(clone_cmd, cwd=inputs.repo_parent_folder, check=True)
@@ -173,46 +210,55 @@ def run_new(args: argparse.Namespace) -> None:
 
         print_section("Git Configuration")
         signing_key_cmd = ["git", "config", "user.signingkey", inputs.ssh_key]
+        log_command(logger, signing_key_cmd, cwd=repo_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(signing_key_cmd)}{ansi.reset}")
         if not args.dry_run:
             subprocess.run(signing_key_cmd, cwd=repo_path, check=True)
 
         gpg_format_cmd = ["git", "config", "gpg.format", "ssh"]
+        log_command(logger, gpg_format_cmd, cwd=repo_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(gpg_format_cmd)}{ansi.reset}")
         if not args.dry_run:
             subprocess.run(gpg_format_cmd, cwd=repo_path, check=True)
 
         gpg_sign_cmd = ["git", "config", "commit.gpgsign", "true"]
+        log_command(logger, gpg_sign_cmd, cwd=repo_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(gpg_sign_cmd)}{ansi.reset}")
         if not args.dry_run:
             subprocess.run(gpg_sign_cmd, cwd=repo_path, check=True)
 
         pull_rebase_cmd = ["git", "config", "pull.rebase", "true"]
+        log_command(logger, pull_rebase_cmd, cwd=repo_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(pull_rebase_cmd)}{ansi.reset}")
         if not args.dry_run:
             subprocess.run(pull_rebase_cmd, cwd=repo_path, check=True)
 
         user_name_cmd = ["git", "config", "user.name", inputs.git_name]
+        log_command(logger, user_name_cmd, cwd=repo_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(user_name_cmd)}{ansi.reset}")
         if not args.dry_run:
             subprocess.run(user_name_cmd, cwd=repo_path, check=True)
 
         email_cmd = ["git", "config", "user.email", inputs.git_email]
+        log_command(logger, email_cmd, cwd=repo_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(email_cmd)}{ansi.reset}")
         if not args.dry_run:
             subprocess.run(email_cmd, cwd=repo_path, check=True)
 
         remove_origin_cmd = ["git", "remote", "remove", "origin"]
+        log_command(logger, remove_origin_cmd, cwd=repo_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(remove_origin_cmd)}{ansi.reset}")
         if not args.dry_run:
             subprocess.run(remove_origin_cmd, cwd=repo_path, check=False)
 
         add_origin_cmd = ["git", "remote", "add", "origin", remote_url]
+        log_command(logger, add_origin_cmd, cwd=repo_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(add_origin_cmd)}{ansi.reset}")
         if not args.dry_run:
             subprocess.run(add_origin_cmd, cwd=repo_path, check=True)
 
         checkout_cmd = ["git", "checkout", "-B", inputs.git_repo_branch]
+        log_command(logger, checkout_cmd, cwd=repo_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(checkout_cmd)}{ansi.reset}")
         if not args.dry_run:
             subprocess.run(checkout_cmd, cwd=repo_path, check=True)
@@ -227,28 +273,35 @@ def run_new(args: argparse.Namespace) -> None:
             readme_path = repo_path / "README.md"
             if not readme_path.exists():
                 readme_path.write_text("", encoding="utf-8")
+                logger.info("write_file path=%s", readme_path)
 
         add_cmd = ["git", "add", "."]
+        log_command(logger, add_cmd, cwd=repo_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(add_cmd)}{ansi.reset}")
         if not args.dry_run:
             subprocess.run(add_cmd, cwd=repo_path, check=True)
 
         commit_cmd = ["git", "commit", "-m", "chore: init"]
+        log_command(logger, commit_cmd, cwd=repo_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(commit_cmd)}{ansi.reset}")
         if not args.dry_run:
             subprocess.run(commit_cmd, cwd=repo_path, check=True)
 
         push_cmd = ["git", "push", "-u", "origin", inputs.git_repo_branch]
+        log_command(logger, push_cmd, cwd=repo_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(push_cmd)}{ansi.reset}")
         if not args.dry_run:
             subprocess.run(push_cmd, cwd=repo_path, check=True)
 
+        logger.info("workflow_complete command=repo new repo_name=%s", inputs.repo_name)
         print(f"\n{ansi.green}Repository setup complete!{ansi.reset}")
     except subprocess.CalledProcessError as exc:
         command = exc.cmd if isinstance(exc.cmd, str) else " ".join(exc.cmd)
+        logger.error("workflow_failed command=repo new subprocess=%s", command)
         raise CommandError(f"Command failed ({exc.returncode}): {command}") from exc
     except FileNotFoundError as exc:
         executable = exc.filename or "unknown executable"
+        logger.error("workflow_failed command=repo new executable=%s", executable)
         raise CommandError(f"Required executable not found: {executable}") from exc
 
 

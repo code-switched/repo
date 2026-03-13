@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import logging
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -196,6 +197,27 @@ def print_summary(title: str, rows: list[tuple[str, str]]) -> None:
     print_section(title)
     for label, value in rows:
         print(f"  {ansi.cyan}{label:<16}{ansi.reset} {value}")
+
+
+def log_command(
+    logger: logging.Logger,
+    command: list[str],
+    *,
+    cwd: Path | None = None,
+    dry_run: bool = False,
+) -> None:
+    """Log an external command invocation for troubleshooting."""
+    rendered = " ".join(command)
+    if cwd is None:
+        logger.info("external_command command=%s dry_run=%s", rendered, dry_run)
+        return
+
+    logger.info(
+        "external_command command=%s cwd=%s dry_run=%s",
+        rendered,
+        cwd,
+        dry_run,
+    )
 
 
 def confirm_proceed(message: str = "Proceed with these actions?") -> bool:
