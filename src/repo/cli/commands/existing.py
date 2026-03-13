@@ -144,6 +144,14 @@ def run_existing(args: argparse.Namespace) -> None:
                 "Please ask the repo owner to add you as a collaborator and try again"
             )
 
+    if not args.non_interactive:
+        key_added = input(
+            f"Have you added your SSH key to GitHub? "
+            f"{ansi.yellow}This is the last step.{ansi.reset} (y/N): "
+        )
+        if key_added.strip().lower() not in YES_VALUES:
+            raise CommandError("Please add your SSH key to GitHub and try again")
+
     try:
         print_section("Workspace")
         if args.dry_run:
@@ -170,14 +178,6 @@ def run_existing(args: argparse.Namespace) -> None:
         print(f"\n{ansi.grey}{' '.join(user_email_cmd)}{ansi.reset}")
         if not args.dry_run:
             subprocess.run(user_email_cmd, cwd=repo_path, check=True)
-
-        if not args.non_interactive:
-            key_added = input(
-                f"Have you added your SSH key to GitHub? "
-                f"{ansi.yellow}This is the last step.{ansi.reset} (y/N): "
-            )
-            if key_added.strip().lower() not in YES_VALUES:
-                raise CommandError("Please add your SSH key to GitHub and try again")
 
         signing_key_cmd = [git_bin, "config", "user.signingkey", inputs.ssh_key]
         log_command(logger, signing_key_cmd, cwd=repo_path, dry_run=args.dry_run)

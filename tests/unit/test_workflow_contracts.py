@@ -7,10 +7,13 @@ import subprocess
 from argparse import Namespace
 from pathlib import Path
 
+import pytest
+
 from repo.cli.commands import existing as existing_command
 from repo.cli.commands import new as new_command
 from repo.cli.commands import ssh as ssh_command
 from repo.cli.commands import started as started_command
+from repo.core.exceptions import CommandError
 
 
 class SubprocessRecorder:
@@ -147,6 +150,45 @@ def test_existing_workflow_matches_contract(monkeypatch, tmp_path: Path) -> None
     existing_command.run_existing(args)
     actual = to_command_strings(recorder.calls, home=Path.home())
     assert actual == contracts["existing_non_interactive"]
+
+
+def test_existing_aborts_before_side_effects_when_ssh_key_not_confirmed(
+    monkeypatch,
+    tmp_path: Path,
+) -> None:
+    """Interactive key confirmation should abort before any subprocess activity."""
+    recorder = SubprocessRecorder()
+    monkeypatch.setattr(existing_command.subprocess, "run", recorder.run)
+
+    responses = iter(["y", "y", "n"])
+    prompts: list[str] = []
+
+    def fake_input(prompt: str = "") -> str:
+        prompts.append(prompt)
+        return next(responses)
+
+    monkeypatch.setattr("builtins.input", fake_input)
+
+    args = Namespace(
+        dry_run=False,
+        non_interactive=False,
+        force=False,
+        username="testuser",
+        repo_url="https://github.com/owner/demo.git",
+        branch="main",
+        git_name="Test User",
+        git_email="test@example.com",
+        repo_parent_folder=str(tmp_path),
+        ssh_key="~/.ssh/id_ed25519_testuser.pub",
+        ssh_host="testuser.github.com",
+        confirm_permissions=False,
+    )
+
+    with pytest.raises(CommandError, match="Please add your SSH key to GitHub and try again"):
+        existing_command.run_existing(args)
+
+    assert recorder.calls == []
+    assert not (tmp_path / "demo").exists()
 
 
 def test_started_workflow_matches_contract(monkeypatch, tmp_path: Path) -> None:
