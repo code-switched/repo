@@ -12,5 +12,5 @@
 ## Improvements
 
 - [x] Add logging that goes to ./data/logs/ 
-- [ ] In the @main branch check ./trick.md, let's improve that process of path entry by using the trick
+- [x] In the @main branch check ./trick.md, let's improve that process of path entry by using the trick
 - [x] Instead of --yes lets do --force, idk for sure but think force is more in line with typical pythonic convention for CLI tools

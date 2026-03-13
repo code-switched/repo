@@ -17,6 +17,7 @@ from ._shared import (
     parse_repo_coordinates,
     print_section,
     print_summary,
+    prompt_path,
     prompt_required,
     prompt_ssh_key,
     prompt_with_default,
@@ -300,7 +301,7 @@ def collect_existing_inputs(args: argparse.Namespace) -> ExistingInputs:
             f"(e.g. {ansi.cyan}~/Documents{ansi.reset} or "
             f"{ansi.cyan}C:\\Users\\YourName\\Documents{ansi.reset}): "
         )
-        entered_folder = prompt_required(" > ")
+        entered_folder = prompt_path(" > ", only_directories=True)
         repo_parent_folder = Path(entered_folder).expanduser()
 
     if args.ssh_key:

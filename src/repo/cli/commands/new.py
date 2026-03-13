@@ -24,6 +24,7 @@ from ._shared import (
     log_command,
     print_section,
     print_summary,
+    prompt_path,
     prompt_required,
     prompt_ssh_key,
     prompt_with_default,
@@ -317,7 +318,7 @@ def collect_new_inputs(args: argparse.Namespace) -> NewInputs:
             f"(e.g. {ansi.cyan}~/Documents{ansi.reset} or "
             f"{ansi.cyan}C:\\Users\\Name\\Documents{ansi.reset}): "
         )
-        entered = prompt_required(" > ")
+        entered = prompt_path(" > ", only_directories=True)
         repo_parent_folder = Path(entered).expanduser()
 
     if args.repo_name:

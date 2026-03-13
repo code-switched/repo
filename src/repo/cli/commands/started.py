@@ -24,6 +24,7 @@ from ._shared import (
     log_command,
     print_section,
     print_summary,
+    prompt_path,
     prompt_required,
     prompt_ssh_key,
     prompt_with_default,
@@ -407,7 +408,7 @@ def resolve_project_path(args: argparse.Namespace) -> Path:
             "Enter the path to your existing project: "
             f"{ansi.grey}(or press Enter for current directory){ansi.reset}"
         )
-        entered_path = input(" > ").strip()
+        entered_path = prompt_path(" > ", only_directories=True, allow_empty=True)
         project_path = Path(entered_path).expanduser().resolve() if entered_path else Path.cwd().resolve()
 
     if not project_path.exists():

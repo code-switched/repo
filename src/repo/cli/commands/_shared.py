@@ -3,9 +3,13 @@
 from __future__ import annotations
 
 import re
+import sys
 import logging
 from pathlib import Path
 from urllib.parse import urlparse
+
+from prompt_toolkit import prompt
+from prompt_toolkit.completion import PathCompleter
 
 from ..console import ansi
 from ...core.exceptions import CommandError
@@ -29,6 +33,49 @@ def prompt_required(message: str) -> str:
     if value:
         return value
     raise CommandError("A required value was not provided")
+
+
+def prompt_path(
+    message: str,
+    *,
+    only_directories: bool = True,
+    allow_empty: bool = False,
+) -> str:
+    """Prompt for a path with tab completion when running in a TTY."""
+    if not supports_path_completion():
+        value = normalize_path_input(input(message))
+        if value:
+            return value
+        if allow_empty:
+            return ""
+        raise CommandError("A required value was not provided")
+
+    completer = PathCompleter(
+        expanduser=True,
+        only_directories=only_directories,
+    )
+    value = normalize_path_input(
+        prompt(
+            message,
+            completer=completer,
+            complete_while_typing=True,
+        )
+    )
+    if value:
+        return value
+    if allow_empty:
+        return ""
+    raise CommandError("A required value was not provided")
+
+
+def supports_path_completion() -> bool:
+    """Return whether interactive path completion is supported for this session."""
+    return sys.stdin.isatty() and sys.stdout.isatty()
+
+
+def normalize_path_input(value: str) -> str:
+    """Normalize quoted path input from interactive prompts."""
+    return value.strip().strip('"').strip("'")
 
 
 def normalize_repo_type(value: str) -> str:

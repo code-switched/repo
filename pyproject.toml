@@ -10,6 +10,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "ghapi>=1.0.8",
+    "prompt-toolkit>=3.0.52",
 ]
 
 [project.optional-dependencies]
