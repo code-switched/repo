@@ -90,7 +90,8 @@ def run_existing(args: argparse.Namespace) -> None:
     if not args.non_interactive and not args.yes and not confirm_proceed():
         raise CommandError("Operation cancelled by user")
 
-    if inputs.username != organization and not args.confirm_permissions:
+    owner_matches_username = inputs.username.casefold() == organization.casefold()
+    if not owner_matches_username and not args.confirm_permissions:
         if args.non_interactive:
             raise CommandError(
                 "--confirm-permissions is required when username differs from owner "

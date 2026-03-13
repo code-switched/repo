@@ -10,6 +10,7 @@ from ..console import ansi
 from ...core.exceptions import CommandError
 
 YES_VALUES = {"y", "yes"}
+IDENTITY_PART_PATTERN = re.compile(r"[^0-9A-Za-z]+")
 
 
 def prompt_with_default(message: str, default: str) -> str:
@@ -97,12 +98,69 @@ def prompt_ssh_key(username: str) -> str:
 
 
 def find_default_key(public_keys: list[Path], username: str) -> Path | None:
-    """Find a likely default key by username token in the filename."""
-    username_token = username.lower()
+    """Find a likely default key by normalized username token matching."""
+    username_parts = split_identity_parts(username)
+    if not username_parts:
+        return None
+
+    username_compact = "".join(username_parts)
     for key in public_keys:
-        if username_token in key.name.lower():
+        if key_matches_username(key, username_parts, username_compact):
             return key
     return None
+
+
+def split_identity_parts(value: str) -> list[str]:
+    """Split an identity into lowercase alphanumeric tokens."""
+    normalized = value.casefold().strip()
+    if not normalized:
+        return []
+    return [part for part in IDENTITY_PART_PATTERN.split(normalized) if part]
+
+
+def key_matches_username(key: Path, username_parts: list[str], username_compact: str) -> bool:
+    """Check whether a key filename matches username tokens without substring collisions."""
+    key_parts = split_identity_parts(key.stem)
+    if not key_parts:
+        return False
+
+    if has_part_sequence(key_parts, username_parts):
+        return True
+
+    for part in key_parts:
+        if part == username_compact:
+            return True
+
+    if len(username_parts) < 2:
+        return False
+
+    window_size = len(username_parts)
+    max_start = len(key_parts) - window_size + 1
+    if max_start < 1:
+        return False
+
+    for start in range(max_start):
+        if "".join(key_parts[start:start + window_size]) == username_compact:
+            return True
+
+    return False
+
+
+def has_part_sequence(parts: list[str], target: list[str]) -> bool:
+    """Return whether target appears as a contiguous token sequence in parts."""
+    window_size = len(target)
+    if window_size == 0:
+        return False
+
+    max_start = len(parts) - window_size + 1
+    if max_start < 1:
+        return False
+
+    for start in range(max_start):
+        if parts[start:start + window_size] == target:
+            return True
+
+    return False
 
 
 def parse_repo_coordinates(repo_url: str) -> tuple[str, str]:
