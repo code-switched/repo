@@ -10,7 +10,12 @@ from dataclasses import dataclass
 
 from ..console import ansi
 from ...core.exceptions import CommandError
-from ...core.github import create_github_api, create_repository, list_authenticated_orgs
+from ...core.github import (
+    create_github_api,
+    create_repository,
+    ensure_github_auth_for_user,
+    list_authenticated_orgs,
+)
 from ._shared import (
     confirm_proceed,
     normalize_repo_type,
@@ -102,40 +107,18 @@ def run_started(args: argparse.Namespace) -> None:
             print_section("Authentication")
             print("Open the browser profile associated with this GitHub account")
             input(f"This will log you in. Press {ansi.green}Enter{ansi.reset} to continue...")
-
-            status_cmd = ["gh", "auth", "status"]
-            print(f"\n{ansi.grey}{' '.join(status_cmd)}{ansi.reset}")
-            if not args.dry_run:
-                subprocess.run(status_cmd, check=False)
-
-            logout_cmd = ["gh", "auth", "logout"]
-            print(f"\n{ansi.grey}{' '.join(logout_cmd)}{ansi.reset}")
-            if not args.dry_run:
-                subprocess.run(logout_cmd, check=False)
-
-            login_cmd = [
-                "gh",
-                "auth",
-                "login",
-                "--git-protocol",
-                "ssh",
-                "--hostname",
-                "github.com",
-                "--web",
-            ]
-            print(f"\n{ansi.grey}{' '.join(login_cmd)}{ansi.reset}")
-            if not args.dry_run:
-                subprocess.run(login_cmd, check=True)
-
-            verify_cmd = ["gh", "auth", "status"]
-            print(f"\n{ansi.grey}{' '.join(verify_cmd)}{ansi.reset}")
-            if not args.dry_run:
-                subprocess.run(verify_cmd, check=True)
-
-            list_cmd = ["gh", "repo", "list"]
-            print(f"\n{ansi.grey}{' '.join(list_cmd)}{ansi.reset}")
-            if not args.dry_run:
-                subprocess.run(list_cmd, check=True)
+            if args.dry_run:
+                print(
+                    f"\n{ansi.yellow}[dry-run]{ansi.reset} would ensure GitHub auth "
+                    f"for {inputs.username}"
+                )
+            else:
+                ensure_github_auth_for_user(
+                    inputs.username,
+                    command_logger=lambda cmd: print(
+                        f"\n{ansi.grey}{' '.join(cmd)}{ansi.reset}"
+                    ),
+                )
 
         api = None
         if not args.dry_run:
