@@ -202,7 +202,7 @@ def test_run_new_prompt_flow_matches_contract(monkeypatch, tmp_path: Path) -> No
     args = Namespace(
         dry_run=True,
         non_interactive=False,
-        yes=False,
+        force=False,
         repo_parent_folder=str(tmp_path / "repos"),
         repo_name="demo",
         branch="main",
@@ -232,7 +232,7 @@ def test_run_existing_prompt_flow_matches_contract(monkeypatch, tmp_path: Path) 
     args = Namespace(
         dry_run=True,
         non_interactive=False,
-        yes=False,
+        force=False,
         username="testuser",
         repo_url="https://github.com/owner/demo.git",
         branch="main",
@@ -260,7 +260,7 @@ def test_run_started_prompt_flow_matches_contract(monkeypatch, tmp_path: Path) -
     args = Namespace(
         dry_run=True,
         non_interactive=False,
-        yes=False,
+        force=False,
         project_path=str(tmp_path),
         repo_name="demo",
         repo_type="user",
@@ -289,7 +289,7 @@ def test_run_ssh_prompt_flow_matches_contract(monkeypatch) -> None:
     args = Namespace(
         dry_run=True,
         non_interactive=False,
-        yes=False,
+        force=False,
         account_name="testuser",
         email="test@example.com",
         machine_name="machine",
@@ -322,7 +322,7 @@ def test_run_new_org_prompt_flow_matches_contract(monkeypatch, tmp_path: Path) -
     args = Namespace(
         dry_run=False,
         non_interactive=False,
-        yes=False,
+        force=False,
         repo_parent_folder=str(tmp_path / "repos"),
         repo_name="demo",
         branch="main",
@@ -365,7 +365,7 @@ def test_run_started_org_prompt_flow_matches_contract(monkeypatch, tmp_path: Pat
     args = Namespace(
         dry_run=False,
         non_interactive=False,
-        yes=False,
+        force=False,
         project_path=str(project_path),
         repo_name="demo",
         repo_type="org",

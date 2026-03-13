@@ -62,7 +62,7 @@ def register_new_command(subparsers: argparse._SubParsersAction) -> None:
         help="Require flags instead of prompts",
     )
     parser.add_argument(
-        "--yes",
+        "--force",
         action="store_true",
         help="Skip preflight confirmation prompt",
     )
@@ -116,7 +116,7 @@ def run_new(args: argparse.Namespace) -> None:
             ("Mode", "dry-run" if args.dry_run else "execute"),
         ],
     )
-    if not args.non_interactive and not args.yes and not confirm_proceed():
+    if not args.non_interactive and not args.force and not confirm_proceed():
         raise CommandError("Operation cancelled by user")
 
     try:

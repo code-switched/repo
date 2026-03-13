@@ -104,7 +104,7 @@ def test_new_workflow_matches_contract(monkeypatch, tmp_path: Path) -> None:
     args = Namespace(
         dry_run=False,
         non_interactive=True,
-        yes=False,
+        force=False,
         repo_parent_folder=str(repo_parent),
         repo_name="demo",
         branch="main",
@@ -132,7 +132,7 @@ def test_existing_workflow_matches_contract(monkeypatch, tmp_path: Path) -> None
     args = Namespace(
         dry_run=False,
         non_interactive=True,
-        yes=False,
+        force=False,
         username="testuser",
         repo_url="https://github.com/testuser/demo.git",
         branch="main",
@@ -165,7 +165,7 @@ def test_started_workflow_matches_contract(monkeypatch, tmp_path: Path) -> None:
     args = Namespace(
         dry_run=False,
         non_interactive=True,
-        yes=False,
+        force=False,
         project_path=str(project_path),
         repo_name="demo",
         repo_type="user",
@@ -195,7 +195,7 @@ def test_ssh_workflow_matches_contract(monkeypatch, tmp_path: Path) -> None:
     args = Namespace(
         dry_run=False,
         non_interactive=True,
-        yes=False,
+        force=False,
         account_name="testuser",
         email="test@example.com",
         machine_name="machine",

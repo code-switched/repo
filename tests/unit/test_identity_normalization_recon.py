@@ -14,7 +14,7 @@ def build_existing_args(**overrides) -> Namespace:
     values = {
         "dry_run": True,
         "non_interactive": True,
-        "yes": False,
+        "force": False,
         "username": "testuser",
         "repo_url": "https://github.com/testuser/demo.git",
         "branch": "main",
