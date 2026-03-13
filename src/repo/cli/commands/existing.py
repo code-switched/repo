@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
 import subprocess
 from pathlib import Path
 from dataclasses import dataclass
@@ -38,6 +39,24 @@ class ExistingInputs:
     repo_parent_folder: Path
     ssh_key: str
     ssh_host: str
+
+
+def resolve_git_executable() -> str:
+    """Resolve git executable command for subprocess calls."""
+    configured = os.getenv("REPO_GIT_BIN", "").strip()
+    if configured:
+        return configured
+
+    return "git"
+
+
+def resolve_ssh_executable() -> str:
+    """Resolve ssh executable command for subprocess calls."""
+    configured = os.getenv("REPO_SSH_BIN", "").strip()
+    if configured:
+        return configured
+
+    return "ssh"
 
 
 def register_existing_command(subparsers: argparse._SubParsersAction) -> None:
@@ -76,6 +95,8 @@ def register_existing_command(subparsers: argparse._SubParsersAction) -> None:
 def run_existing(args: argparse.Namespace) -> None:
     """Execute `repo existing`."""
     inputs = collect_existing_inputs(args)
+    git_bin = resolve_git_executable()
+    ssh_bin = resolve_ssh_executable()
     organization, repo_name = parse_repo_coordinates(inputs.git_repo_url)
     repo_path = inputs.repo_parent_folder / repo_name
     logger.info(
@@ -131,20 +152,20 @@ def run_existing(args: argparse.Namespace) -> None:
             repo_path.mkdir(parents=True, exist_ok=True)
             logger.info("create_directory path=%s", repo_path)
 
-        init_cmd = ["git", "init"]
+        init_cmd = [git_bin, "init"]
         log_command(logger, init_cmd, cwd=repo_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(init_cmd)}{ansi.reset}")
         if not args.dry_run:
             subprocess.run(init_cmd, cwd=repo_path, check=True)
 
         print_section("Git Configuration")
-        user_name_cmd = ["git", "config", "user.name", inputs.git_name]
+        user_name_cmd = [git_bin, "config", "user.name", inputs.git_name]
         log_command(logger, user_name_cmd, cwd=repo_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(user_name_cmd)}{ansi.reset}")
         if not args.dry_run:
             subprocess.run(user_name_cmd, cwd=repo_path, check=True)
 
-        user_email_cmd = ["git", "config", "user.email", inputs.git_email]
+        user_email_cmd = [git_bin, "config", "user.email", inputs.git_email]
         log_command(logger, user_email_cmd, cwd=repo_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(user_email_cmd)}{ansi.reset}")
         if not args.dry_run:
@@ -158,25 +179,25 @@ def run_existing(args: argparse.Namespace) -> None:
             if key_added.strip().lower() not in YES_VALUES:
                 raise CommandError("Please add your SSH key to GitHub and try again")
 
-        signing_key_cmd = ["git", "config", "user.signingkey", inputs.ssh_key]
+        signing_key_cmd = [git_bin, "config", "user.signingkey", inputs.ssh_key]
         log_command(logger, signing_key_cmd, cwd=repo_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(signing_key_cmd)}{ansi.reset}")
         if not args.dry_run:
             subprocess.run(signing_key_cmd, cwd=repo_path, check=True)
 
-        gpg_format_cmd = ["git", "config", "gpg.format", "ssh"]
+        gpg_format_cmd = [git_bin, "config", "gpg.format", "ssh"]
         log_command(logger, gpg_format_cmd, cwd=repo_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(gpg_format_cmd)}{ansi.reset}")
         if not args.dry_run:
             subprocess.run(gpg_format_cmd, cwd=repo_path, check=True)
 
-        gpg_sign_cmd = ["git", "config", "commit.gpgsign", "true"]
+        gpg_sign_cmd = [git_bin, "config", "commit.gpgsign", "true"]
         log_command(logger, gpg_sign_cmd, cwd=repo_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(gpg_sign_cmd)}{ansi.reset}")
         if not args.dry_run:
             subprocess.run(gpg_sign_cmd, cwd=repo_path, check=True)
 
-        pull_rebase_cmd = ["git", "config", "pull.rebase", "true"]
+        pull_rebase_cmd = [git_bin, "config", "pull.rebase", "true"]
         log_command(logger, pull_rebase_cmd, cwd=repo_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(pull_rebase_cmd)}{ansi.reset}")
         if not args.dry_run:
@@ -198,7 +219,7 @@ def run_existing(args: argparse.Namespace) -> None:
             f"{ansi.yellow}\"Enable Commit Signing\"{ansi.reset} and turn it on"
         )
 
-        ssh_test_cmd = ["ssh", "-T", f"git@{inputs.ssh_host}"]
+        ssh_test_cmd = [ssh_bin, "-T", f"git@{inputs.ssh_host}"]
         log_command(logger, ssh_test_cmd, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(ssh_test_cmd)}{ansi.reset}")
         if not args.dry_run:
@@ -206,26 +227,26 @@ def run_existing(args: argparse.Namespace) -> None:
 
         print_section("Remote Setup")
         remote_url = f"git@{inputs.ssh_host}:{organization}/{repo_name}.git"
-        remove_origin_cmd = ["git", "remote", "remove", "origin"]
+        remove_origin_cmd = [git_bin, "remote", "remove", "origin"]
         log_command(logger, remove_origin_cmd, cwd=repo_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(remove_origin_cmd)}{ansi.reset}")
         if not args.dry_run:
             subprocess.run(remove_origin_cmd, cwd=repo_path, check=False)
 
-        add_origin_cmd = ["git", "remote", "add", "origin", remote_url]
+        add_origin_cmd = [git_bin, "remote", "add", "origin", remote_url]
         log_command(logger, add_origin_cmd, cwd=repo_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(add_origin_cmd)}{ansi.reset}")
         if not args.dry_run:
             subprocess.run(add_origin_cmd, cwd=repo_path, check=True)
 
-        fetch_cmd = ["git", "fetch", "origin"]
+        fetch_cmd = [git_bin, "fetch", "origin"]
         log_command(logger, fetch_cmd, cwd=repo_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(fetch_cmd)}{ansi.reset}")
         if not args.dry_run:
             subprocess.run(fetch_cmd, cwd=repo_path, check=True)
 
         checkout_cmd = [
-            "git",
+            git_bin,
             "checkout",
             "-B",
             inputs.git_repo_branch,
@@ -236,7 +257,7 @@ def run_existing(args: argparse.Namespace) -> None:
         if not args.dry_run:
             subprocess.run(checkout_cmd, cwd=repo_path, check=True)
 
-        pull_cmd = ["git", "pull"]
+        pull_cmd = [git_bin, "pull"]
         log_command(logger, pull_cmd, cwd=repo_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(pull_cmd)}{ansi.reset}")
         if not args.dry_run:
