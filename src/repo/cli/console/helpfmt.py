@@ -36,6 +36,11 @@ class ColoredHelpFormatter(argparse.RawDescriptionHelpFormatter):
     def _get_help_string(self, action: argparse.Action) -> str:  # noqa: N802
         """Return help string with coloured default values (if any)."""
         help_text = super()._get_help_string(action)
+        placeholder = "%(default)s"
+        if placeholder in help_text:
+            coloured_placeholder = f"{ansi.yellow}{placeholder}{ansi.RESET}"
+            return help_text.replace(placeholder, coloured_placeholder)
+
         match = re.search(r"\(default: ([^)]+)\)", help_text)
         if match:
             value = match.group(1)
