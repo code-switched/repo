@@ -49,6 +49,15 @@ class StartedInputs:
     owner: str | None
 
 
+def resolve_git_executable() -> str:
+    """Resolve git executable command for subprocess calls."""
+    configured = os.getenv("REPO_GIT_BIN", "").strip()
+    if configured:
+        return configured
+
+    return "git"
+
+
 def register_started_command(subparsers: argparse._SubParsersAction) -> None:
     """Register `repo started`."""
     parser = subparsers.add_parser(
@@ -86,6 +95,7 @@ def register_started_command(subparsers: argparse._SubParsersAction) -> None:
 def run_started(args: argparse.Namespace) -> None:
     """Execute `repo started`."""
     inputs = collect_started_inputs(args)
+    git_bin = resolve_git_executable()
     logger.info(
         "workflow_start command=repo started project_path=%s repo_name=%s repo_type=%s "
         "visibility=%s username=%s dry_run=%s non_interactive=%s",
@@ -191,69 +201,69 @@ def run_started(args: argparse.Namespace) -> None:
 
         print_section("Git Configuration")
         if not (inputs.project_path / ".git").exists():
-            init_cmd = ["git", "init"]
+            init_cmd = [git_bin, "init"]
             log_command(logger, init_cmd, cwd=inputs.project_path, dry_run=args.dry_run)
             print(f"\n{ansi.grey}{' '.join(init_cmd)}{ansi.reset}")
             if not args.dry_run:
                 subprocess.run(init_cmd, cwd=inputs.project_path, check=True)
 
-        user_name_cmd = ["git", "config", "user.name", inputs.git_name]
+        user_name_cmd = [git_bin, "config", "user.name", inputs.git_name]
         log_command(logger, user_name_cmd, cwd=inputs.project_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(user_name_cmd)}{ansi.reset}")
         if not args.dry_run:
             subprocess.run(user_name_cmd, cwd=inputs.project_path, check=True)
 
-        user_email_cmd = ["git", "config", "user.email", inputs.git_email]
+        user_email_cmd = [git_bin, "config", "user.email", inputs.git_email]
         log_command(logger, user_email_cmd, cwd=inputs.project_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(user_email_cmd)}{ansi.reset}")
         if not args.dry_run:
             subprocess.run(user_email_cmd, cwd=inputs.project_path, check=True)
 
-        signing_key_cmd = ["git", "config", "user.signingkey", inputs.ssh_key]
+        signing_key_cmd = [git_bin, "config", "user.signingkey", inputs.ssh_key]
         log_command(logger, signing_key_cmd, cwd=inputs.project_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(signing_key_cmd)}{ansi.reset}")
         if not args.dry_run:
             subprocess.run(signing_key_cmd, cwd=inputs.project_path, check=True)
 
-        gpg_format_cmd = ["git", "config", "gpg.format", "ssh"]
+        gpg_format_cmd = [git_bin, "config", "gpg.format", "ssh"]
         log_command(logger, gpg_format_cmd, cwd=inputs.project_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(gpg_format_cmd)}{ansi.reset}")
         if not args.dry_run:
             subprocess.run(gpg_format_cmd, cwd=inputs.project_path, check=True)
 
-        gpg_sign_cmd = ["git", "config", "commit.gpgsign", "true"]
+        gpg_sign_cmd = [git_bin, "config", "commit.gpgsign", "true"]
         log_command(logger, gpg_sign_cmd, cwd=inputs.project_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(gpg_sign_cmd)}{ansi.reset}")
         if not args.dry_run:
             subprocess.run(gpg_sign_cmd, cwd=inputs.project_path, check=True)
 
-        pull_rebase_cmd = ["git", "config", "pull.rebase", "true"]
+        pull_rebase_cmd = [git_bin, "config", "pull.rebase", "true"]
         log_command(logger, pull_rebase_cmd, cwd=inputs.project_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(pull_rebase_cmd)}{ansi.reset}")
         if not args.dry_run:
             subprocess.run(pull_rebase_cmd, cwd=inputs.project_path, check=True)
 
-        checkout_cmd = ["git", "checkout", "-B", "main"]
+        checkout_cmd = [git_bin, "checkout", "-B", "main"]
         log_command(logger, checkout_cmd, cwd=inputs.project_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(checkout_cmd)}{ansi.reset}")
         if not args.dry_run:
             subprocess.run(checkout_cmd, cwd=inputs.project_path, check=True)
 
         remote_url = f"git@{inputs.ssh_host}:{owner}/{inputs.repo_name}.git"
-        remove_origin_cmd = ["git", "remote", "remove", "origin"]
+        remove_origin_cmd = [git_bin, "remote", "remove", "origin"]
         log_command(logger, remove_origin_cmd, cwd=inputs.project_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(remove_origin_cmd)}{ansi.reset}")
         if not args.dry_run:
             subprocess.run(remove_origin_cmd, cwd=inputs.project_path, check=False)
 
-        add_origin_cmd = ["git", "remote", "add", "origin", remote_url]
+        add_origin_cmd = [git_bin, "remote", "add", "origin", remote_url]
         log_command(logger, add_origin_cmd, cwd=inputs.project_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(add_origin_cmd)}{ansi.reset}")
         if not args.dry_run:
             subprocess.run(add_origin_cmd, cwd=inputs.project_path, check=True)
 
         print_section("Initial Commit")
-        status_cmd = ["git", "status", "--porcelain"]
+        status_cmd = [git_bin, "status", "--porcelain"]
         log_command(logger, status_cmd, cwd=inputs.project_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(status_cmd)}{ansi.reset}")
         status_output = ""
@@ -268,19 +278,19 @@ def run_started(args: argparse.Namespace) -> None:
             status_output = completed.stdout.strip()
 
         if args.dry_run or status_output:
-            add_cmd = ["git", "add", "."]
+            add_cmd = [git_bin, "add", "."]
             log_command(logger, add_cmd, cwd=inputs.project_path, dry_run=args.dry_run)
             print(f"\n{ansi.grey}{' '.join(add_cmd)}{ansi.reset}")
             if not args.dry_run:
                 subprocess.run(add_cmd, cwd=inputs.project_path, check=True)
 
-            commit_cmd = ["git", "commit", "-m", "chore: init"]
+            commit_cmd = [git_bin, "commit", "-m", "chore: init"]
             log_command(logger, commit_cmd, cwd=inputs.project_path, dry_run=args.dry_run)
             print(f"\n{ansi.grey}{' '.join(commit_cmd)}{ansi.reset}")
             if not args.dry_run:
                 subprocess.run(commit_cmd, cwd=inputs.project_path, check=True)
 
-        push_cmd = ["git", "push", "-u", "origin", "main"]
+        push_cmd = [git_bin, "push", "-u", "origin", "main"]
         log_command(logger, push_cmd, cwd=inputs.project_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(push_cmd)}{ansi.reset}")
         if not args.dry_run:
