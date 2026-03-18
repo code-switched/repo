@@ -23,6 +23,7 @@ __all__ = sorted(list[str](_ALIASES.keys()) + list[str](_CODES.keys()))
 
 
 def __getattr__(name: str) -> str:
+    """Return the ANSI escape code for a lowercase colour alias."""
     alias = _ALIASES.get(name)
     if alias is None:
         raise AttributeError(f'module {__name__!r} has no attribute {name!r}')
@@ -30,4 +31,5 @@ def __getattr__(name: str) -> str:
 
 
 def __dir__() -> list[str]:
+    """Return all public names, including uppercase codes and lowercase aliases."""
     return sorted(list[str](globals().keys()) + list[str](_ALIASES.keys()))

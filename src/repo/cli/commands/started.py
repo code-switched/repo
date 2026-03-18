@@ -140,6 +140,7 @@ def run_started(args: argparse.Namespace) -> None:
                 )
             else:
                 def print_and_log_auth_command(command: list[str]) -> None:
+                    """Log and print an auth command issued by the GitHub auth helper."""
                     log_command(logger, command, dry_run=args.dry_run)
                     print(f"\n{ansi.grey}{' '.join(command)}{ansi.reset}")
 

@@ -10,15 +10,18 @@ class ColoredHelpFormatter(argparse.RawDescriptionHelpFormatter):
     """HelpFormatter that adds colour to key parts of the help output."""
 
     def start_section(self, heading: str) -> None:  # type: ignore[override]
+        """Start a new help section with a green-coloured heading."""
         coloured_heading = f"{ansi.green}{heading}{ansi.RESET}"
         super().start_section(coloured_heading)
 
     def add_usage(self, usage, actions, groups, prefix=None):
+        """Add the usage line with a green 'usage:' prefix."""
         if prefix is None:
             prefix = f"{ansi.green}usage:{ansi.RESET} "
         super().add_usage(usage, actions, groups, prefix)
 
     def _format_action_invocation(self, action: argparse.Action) -> str:
+        """Format option flags in cyan and append a grey metavar when applicable."""
         if not action.option_strings:
             return super()._format_action_invocation(action)
 
@@ -30,6 +33,7 @@ class ColoredHelpFormatter(argparse.RawDescriptionHelpFormatter):
         return ", ".join(parts)
 
     def _format_args(self, action, default_metavar):
+        """Wrap the metavar text in grey ANSI codes."""
         text = super()._format_args(action, default_metavar)
         return f"{ansi.grey}{text}{ansi.RESET}"
 

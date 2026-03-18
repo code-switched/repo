@@ -15,6 +15,7 @@ class Spinner:
     """A simple terminal spinner."""
 
     def __init__(self, message: str = "") -> None:
+        """Initialize the spinner with an optional status message."""
         self.message = message
         self._stop_event = threading.Event()
         self._thread: threading.Thread | None = None
