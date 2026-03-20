@@ -166,8 +166,7 @@ def test_run_gh_repo_list_emits_and_invokes_gh(monkeypatch) -> None:
         return subprocess.CompletedProcess(args=cmd, returncode=0)
 
     monkeypatch.setattr(github.subprocess, "run", fake_run)
-    code = github.run_gh_repo_list(command_logger=logged.append)
-    assert code == 0
+    github.run_gh_repo_list(command_logger=logged.append)
     expected = [
         "gh",
         "repo",

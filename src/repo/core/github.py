@@ -194,7 +194,7 @@ def run_gh_repo_list(
     *,
     hostname: str = "github.com",
     command_logger: Callable[[list[str]], None] | None = None,
-) -> int:
+) -> None:
     """Run `gh repo list` on stdout for the authenticated account (identity check)."""
     list_cmd = [
         "gh",
@@ -206,5 +206,4 @@ def run_gh_repo_list(
         _REPO_LIST_VERIFY_LIMIT,
     ]
     emit_command(list_cmd, command_logger)
-    completed = subprocess.run(list_cmd, check=False)
-    return completed.returncode
+    subprocess.run(list_cmd, check=False)

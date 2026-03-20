@@ -317,7 +317,7 @@ def test_run_new_org_prompt_flow_matches_contract(monkeypatch, tmp_path: Path) -
     monkeypatch.setattr(new_command, "create_github_api", lambda: object())
     monkeypatch.setattr(new_command, "create_repository", lambda **_kwargs: None)
     monkeypatch.setattr(new_command, "ensure_github_auth_for_user", lambda _username, **_kwargs: "testuser")
-    monkeypatch.setattr(new_command, "run_gh_repo_list", lambda **_kwargs: 0)
+    monkeypatch.setattr(new_command, "run_gh_repo_list", lambda **_kwargs: None)
     monkeypatch.setattr(new_command, "list_authenticated_orgs", lambda _api: ["acme"])
 
     args = Namespace(
@@ -358,7 +358,7 @@ def test_run_started_org_prompt_flow_matches_contract(monkeypatch, tmp_path: Pat
     monkeypatch.setattr(started_command, "create_github_api", lambda: object())
     monkeypatch.setattr(started_command, "create_repository", lambda **_kwargs: None)
     monkeypatch.setattr(started_command, "ensure_github_auth_for_user", lambda _username, **_kwargs: "testuser")
-    monkeypatch.setattr(started_command, "run_gh_repo_list", lambda **_kwargs: 0)
+    monkeypatch.setattr(started_command, "run_gh_repo_list", lambda **_kwargs: None)
     monkeypatch.setattr(started_command, "list_authenticated_orgs", lambda _api: ["acme"])
 
     project_path = tmp_path / "project"
