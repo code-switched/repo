@@ -183,3 +183,28 @@ def emit_command(
     if command_logger is None:
         return
     command_logger(command)
+
+
+# Cap avoids unbounded output for users with very large repo counts while still
+# matching interactive verification from the legacy `gh repo list` workflow.
+_REPO_LIST_VERIFY_LIMIT = "500"
+
+
+def run_gh_repo_list(
+    *,
+    hostname: str = "github.com",
+    command_logger: Callable[[list[str]], None] | None = None,
+) -> int:
+    """Run `gh repo list` on stdout for the authenticated account (identity check)."""
+    list_cmd = [
+        "gh",
+        "repo",
+        "list",
+        "--hostname",
+        hostname,
+        "--limit",
+        _REPO_LIST_VERIFY_LIMIT,
+    ]
+    emit_command(list_cmd, command_logger)
+    completed = subprocess.run(list_cmd, check=False)
+    return completed.returncode

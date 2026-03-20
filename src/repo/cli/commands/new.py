@@ -15,6 +15,7 @@ from ...core.github import (
     create_repository,
     ensure_github_auth_for_user,
     list_authenticated_orgs,
+    run_gh_repo_list,
 )
 from ._shared import (
     YES_VALUES,
@@ -137,10 +138,16 @@ def run_new(args: argparse.Namespace) -> None:
                     log_command(logger, command, dry_run=args.dry_run)
                     print(f"\n{ansi.grey}{' '.join(command)}{ansi.reset}")
 
-                ensure_github_auth_for_user(
+                verified_login = ensure_github_auth_for_user(
                     inputs.username,
                     command_logger=print_and_log_auth_command,
                 )
+                print(
+                    f"\n{ansi.cyan}Verified GitHub login:{ansi.reset} "
+                    f"{ansi.green}{verified_login}{ansi.reset}"
+                )
+                logger.info("github_auth_verified login=%s", verified_login)
+                run_gh_repo_list(command_logger=print_and_log_auth_command)
 
             config_familiar = input("\nIs the above configuration familiar? (y/N): ")
             if config_familiar.strip().lower() not in YES_VALUES:

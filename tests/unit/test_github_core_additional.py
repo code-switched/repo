@@ -154,3 +154,28 @@ def test_emit_command_invokes_optional_logger() -> None:
     received: list[list[str]] = []
     github.emit_command(["gh", "auth", "status"], command_logger=received.append)
     assert received == [["gh", "auth", "status"]]
+
+
+def test_run_gh_repo_list_emits_and_invokes_gh(monkeypatch) -> None:
+    """Repo list verification should log argv and run gh with hostname and limit."""
+    logged: list[list[str]] = []
+    run_cmds: list[list[str]] = []
+
+    def fake_run(cmd, **_kwargs):  # noqa: ANN001
+        run_cmds.append(list(cmd))
+        return subprocess.CompletedProcess(args=cmd, returncode=0)
+
+    monkeypatch.setattr(github.subprocess, "run", fake_run)
+    code = github.run_gh_repo_list(command_logger=logged.append)
+    assert code == 0
+    expected = [
+        "gh",
+        "repo",
+        "list",
+        "--hostname",
+        "github.com",
+        "--limit",
+        "500",
+    ]
+    assert logged == [expected]
+    assert run_cmds == [expected]
