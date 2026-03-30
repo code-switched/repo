@@ -196,14 +196,22 @@ def run_gh_repo_list(
     command_logger: Callable[[list[str]], None] | None = None,
 ) -> None:
     """Run `gh repo list` on stdout for the authenticated account (identity check)."""
+    resolved_hostname = hostname.strip()
+    if not resolved_hostname:
+        raise CommandError("GitHub hostname is required")
+
     list_cmd = [
         "gh",
         "repo",
         "list",
-        "--hostname",
-        hostname,
         "--limit",
         _REPO_LIST_VERIFY_LIMIT,
     ]
     emit_command(list_cmd, command_logger)
-    subprocess.run(list_cmd, check=False)
+
+    run_env = None
+    if resolved_hostname != "github.com":
+        run_env = os.environ.copy()
+        run_env["GH_HOST"] = resolved_hostname
+
+    subprocess.run(list_cmd, check=False, env=run_env)

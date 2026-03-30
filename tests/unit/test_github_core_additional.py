@@ -157,12 +157,14 @@ def test_emit_command_invokes_optional_logger() -> None:
 
 
 def test_run_gh_repo_list_emits_and_invokes_gh(monkeypatch) -> None:
-    """Repo list verification should log argv and run gh with hostname and limit."""
+    """Repo list verification should log argv and run gh with limit."""
     logged: list[list[str]] = []
     run_cmds: list[list[str]] = []
+    run_envs: list[dict[str, str] | None] = []
 
-    def fake_run(cmd, **_kwargs):  # noqa: ANN001
+    def fake_run(cmd, **kwargs):  # noqa: ANN001
         run_cmds.append(list(cmd))
+        run_envs.append(kwargs.get("env"))
         return subprocess.CompletedProcess(args=cmd, returncode=0)
 
     monkeypatch.setattr(github.subprocess, "run", fake_run)
@@ -171,10 +173,25 @@ def test_run_gh_repo_list_emits_and_invokes_gh(monkeypatch) -> None:
         "gh",
         "repo",
         "list",
-        "--hostname",
-        "github.com",
         "--limit",
         "500",
     ]
     assert logged == [expected]
     assert run_cmds == [expected]
+    assert run_envs == [None]
+
+
+def test_run_gh_repo_list_sets_gh_host_for_non_default_hostname(monkeypatch) -> None:
+    """Non-default host should set GH_HOST env for `gh repo list`."""
+    run_envs: list[dict[str, str] | None] = []
+
+    def fake_run(_cmd, **kwargs):  # noqa: ANN001
+        run_envs.append(kwargs.get("env"))
+        return subprocess.CompletedProcess(args=["gh", "repo", "list"], returncode=0)
+
+    monkeypatch.setattr(github.subprocess, "run", fake_run)
+    github.run_gh_repo_list(hostname="ghe.example.com")
+
+    assert len(run_envs) == 1
+    assert run_envs[0] is not None
+    assert run_envs[0]["GH_HOST"] == "ghe.example.com"
