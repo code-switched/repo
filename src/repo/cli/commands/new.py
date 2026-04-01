@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import logging
 import subprocess
+import time
 from pathlib import Path
 from dataclasses import dataclass
 
@@ -32,6 +33,9 @@ from ._shared import (
 )
 
 logger = logging.getLogger("repo.cli.commands.new")
+
+_CLONE_RETRY_ATTEMPTS = 5
+_CLONE_RETRY_DELAY_SECONDS = 1.0
 
 
 @dataclass(frozen=True)
@@ -210,7 +214,10 @@ def run_new(args: argparse.Namespace) -> None:
         )
         print(f"\n{ansi.grey}{' '.join(clone_cmd)}{ansi.reset}")
         if not args.dry_run:
-            subprocess.run(clone_cmd, cwd=inputs.repo_parent_folder, check=True)
+            clone_repository_with_retry(
+                clone_cmd,
+                cwd=inputs.repo_parent_folder,
+            )
 
         repo_path = inputs.repo_parent_folder / inputs.repo_name
         if not args.dry_run and not repo_path.exists():
@@ -442,3 +449,56 @@ def select_org(api) -> str:
         raise CommandError("Invalid selection. Choose an organization from the list")
 
     return org_names[numeric_index - 1]
+
+
+def clone_repository_with_retry(clone_cmd: list[str], *, cwd: Path) -> None:
+    """Run git clone and retry brief propagation races for freshly created repos."""
+    completed = run_clone_once(clone_cmd, cwd=cwd)
+    if completed.returncode == 0:
+        return
+
+    if not is_repository_not_found(completed.stderr):
+        raise to_called_process_error(completed, clone_cmd)
+
+    for attempt_index in range(1, _CLONE_RETRY_ATTEMPTS + 1):
+        print(
+            f"{ansi.yellow}Repository is still provisioning on GitHub, "
+            f"retrying clone ({attempt_index}/{_CLONE_RETRY_ATTEMPTS})...{ansi.reset}"
+        )
+        time.sleep(_CLONE_RETRY_DELAY_SECONDS)
+        completed = run_clone_once(clone_cmd, cwd=cwd)
+        if completed.returncode == 0:
+            return
+        if not is_repository_not_found(completed.stderr):
+            raise to_called_process_error(completed, clone_cmd)
+
+    raise to_called_process_error(completed, clone_cmd)
+
+
+def run_clone_once(clone_cmd: list[str], *, cwd: Path) -> subprocess.CompletedProcess[str]:
+    """Run a single clone attempt without raising on non-zero exit codes."""
+    return subprocess.run(
+        clone_cmd,
+        cwd=cwd,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+
+def is_repository_not_found(stderr: str) -> bool:
+    """Return whether stderr indicates repository visibility/propagation lag."""
+    return "repository not found" in stderr.casefold()
+
+
+def to_called_process_error(
+    completed: subprocess.CompletedProcess[str],
+    command: list[str],
+) -> subprocess.CalledProcessError:
+    """Convert completed process output into CalledProcessError for consistent handling."""
+    return subprocess.CalledProcessError(
+        returncode=completed.returncode,
+        cmd=command,
+        output=completed.stdout,
+        stderr=completed.stderr,
+    )
