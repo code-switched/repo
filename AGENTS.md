@@ -18,7 +18,7 @@ if Windows:
 
 Run pytest before and after each turn so you know if your work broke any logic.
 
-Once we come to an agreement on what code should be committed craft a commit mesage for the new code based on ./docs/dev/commits.md and commit the code, make sure the body is a hyphenated bullet list. Do not push unless asked.
+Each turn or significant change should also craft a commit mesage for the new code based on ./docs/dev/commits.md - Analyze and commit the code, make sure the body is a hyphenated bullet list. Do not add a footer to the commit message with attribution. Do not push unless asked.
 
 ## Brainstorming
 
