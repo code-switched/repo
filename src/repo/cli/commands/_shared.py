@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import re
+import subprocess
 import sys
+import time
 import logging
 from pathlib import Path
+from typing import Callable
 from urllib.parse import urlparse
 
 from prompt_toolkit import prompt
@@ -265,6 +268,78 @@ def log_command(
         cwd,
         dry_run,
     )
+
+
+# GitHub's SSH endpoint can briefly report "Repository not found" for several
+# seconds after the REST API creates a new repo, even when the user is auth'd
+# correctly. Retry with backoff to absorb that propagation lag rather than
+# leaving the user with a half-set-up local repo and a confusing error.
+_PROPAGATION_ERROR_MARKERS = (
+    "Repository not found",
+    "Could not read from remote repository",
+)
+
+
+def is_repo_propagation_error(stderr: str) -> bool:
+    """Return True when stderr looks like a post-create propagation lag."""
+    return any(marker in stderr for marker in _PROPAGATION_ERROR_MARKERS)
+
+
+def run_git_with_propagation_retries(
+    command: list[str],
+    *,
+    cwd: Path,
+    logger: logging.Logger,
+    max_attempts: int = 5,
+    initial_delay: float = 2.0,
+    max_delay: float = 8.0,
+    sleep: Callable[[float], None] = time.sleep,
+) -> None:
+    """Run a git command, retrying briefly when GitHub hasn't propagated the new repo."""
+    delay = initial_delay
+    for attempt in range(1, max_attempts + 1):
+        completed = subprocess.run(
+            command,
+            cwd=cwd,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if completed.returncode == 0:
+            if completed.stdout:
+                sys.stdout.write(completed.stdout)
+            if completed.stderr:
+                sys.stderr.write(completed.stderr)
+            return
+
+        stderr = completed.stderr or ""
+        if attempt < max_attempts and is_repo_propagation_error(stderr):
+            logger.info(
+                "git_propagation_retry attempt=%d/%d delay=%.1fs command=%s",
+                attempt,
+                max_attempts,
+                delay,
+                " ".join(command),
+            )
+            print(
+                f"\n{ansi.yellow}new repo not yet reachable over SSH; "
+                f"waiting {delay:.0f}s and retrying "
+                f"(attempt {attempt + 1}/{max_attempts}){ansi.reset}"
+            )
+            sleep(delay)
+            delay = min(delay * 1.5, max_delay)
+            continue
+
+        if completed.stdout:
+            sys.stdout.write(completed.stdout)
+        if completed.stderr:
+            sys.stderr.write(completed.stderr)
+        raise subprocess.CalledProcessError(
+            completed.returncode,
+            command,
+            completed.stdout,
+            completed.stderr,
+        )
 
 
 def confirm_proceed(message: str = "Proceed with these actions?") -> bool:

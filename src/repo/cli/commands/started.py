@@ -29,6 +29,7 @@ from ._shared import (
     prompt_required,
     prompt_ssh_key,
     prompt_with_default,
+    run_git_with_propagation_retries,
 )
 
 logger = logging.getLogger("repo.cli.commands.started")
@@ -193,6 +194,10 @@ def run_started(args: argparse.Namespace) -> None:
                 inputs.repo_visibility,
                 args.dry_run,
             )
+            print(
+                f"\n{ansi.grey}create repository "
+                f"{owner}/{inputs.repo_name} ({inputs.repo_visibility}){ansi.reset}"
+            )
             create_repository(
                 api=api,
                 owner_type=inputs.repo_type,
@@ -301,7 +306,11 @@ def run_started(args: argparse.Namespace) -> None:
         log_command(logger, push_cmd, cwd=inputs.project_path, dry_run=args.dry_run)
         print(f"\n{ansi.grey}{' '.join(push_cmd)}{ansi.reset}")
         if not args.dry_run:
-            subprocess.run(push_cmd, cwd=inputs.project_path, check=True)
+            run_git_with_propagation_retries(
+                push_cmd,
+                cwd=inputs.project_path,
+                logger=logger,
+            )
 
         logger.info("workflow_complete command=repo started repo_name=%s", inputs.repo_name)
         print(f"\n{ansi.green}Repository setup complete!{ansi.reset}")

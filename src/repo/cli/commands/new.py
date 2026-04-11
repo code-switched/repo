@@ -29,6 +29,7 @@ from ._shared import (
     prompt_required,
     prompt_ssh_key,
     prompt_with_default,
+    run_git_with_propagation_retries,
 )
 
 logger = logging.getLogger("repo.cli.commands.new")
@@ -193,6 +194,10 @@ def run_new(args: argparse.Namespace) -> None:
                 inputs.repo_visibility,
                 args.dry_run,
             )
+            print(
+                f"\n{ansi.grey}create repository "
+                f"{owner}/{inputs.repo_name} ({inputs.repo_visibility}){ansi.reset}"
+            )
             create_repository(
                 api=api,
                 owner_type=inputs.repo_type,
@@ -210,7 +215,11 @@ def run_new(args: argparse.Namespace) -> None:
         )
         print(f"\n{ansi.grey}{' '.join(clone_cmd)}{ansi.reset}")
         if not args.dry_run:
-            subprocess.run(clone_cmd, cwd=inputs.repo_parent_folder, check=True)
+            run_git_with_propagation_retries(
+                clone_cmd,
+                cwd=inputs.repo_parent_folder,
+                logger=logger,
+            )
 
         repo_path = inputs.repo_parent_folder / inputs.repo_name
         if not args.dry_run and not repo_path.exists():
