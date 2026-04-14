@@ -14,3 +14,4 @@
 - [x] Add logging that goes to ./data/logs/ 
 - [x] In the @main branch check ./trick.md, let's improve that process of path entry by using the trick
 - [x] Instead of --yes lets do --force, idk for sure but think force is more in line with typical pythonic convention for CLI tools
+- [ ] Reevaluate in what order we check what accounts are already auth'd. In `data\logs\mishap.log` it tells me to press enter to open a page in the browser profile associated but then never does because when checked... the profile is already logged in. either changing the order or clearer prints.
