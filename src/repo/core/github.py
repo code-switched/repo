@@ -11,6 +11,9 @@ from ghapi.all import GhApi
 from .exceptions import CommandError
 
 
+_DEVICE_AUTH_URL = "https://github.com/login/device"
+
+
 def resolve_github_token() -> str:
     """Resolve a GitHub token from env or gh CLI auth state."""
     env_token = os.getenv("GH_TOKEN", "").strip()
@@ -129,6 +132,7 @@ def ensure_github_auth_for_user(
         "--web",
     ]
     emit_command(login_cmd, command_logger)
+    print(f"For headless machines, enter the one-time code at {_DEVICE_AUTH_URL}")
     subprocess.run(login_cmd, check=True)
 
     verified_user = get_active_github_login(
