@@ -6,6 +6,7 @@ import argparse
 import logging
 import subprocess
 import time
+from itertools import count
 from pathlib import Path
 from dataclasses import dataclass
 
@@ -440,7 +441,7 @@ def select_org(api) -> str:
     for index, org_name in enumerate(org_names, start=1):
         print(f"{ansi.yellow}{index}.{ansi.reset} {org_name}")
 
-    while True:
+    for _ in count():
         selection = input("Select the organization by number: ").strip()
         if not selection.isdigit():
             print("Invalid selection. Choose an organization from the list")
