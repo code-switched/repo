@@ -66,6 +66,38 @@ The `body` should include the motivation for the change and contrast this with p
 - Use the imperative, present tense: "change" not "changed" nor "changes"
 - This is the place to mention issue identifiers and their relations
 
+Commit bodies must contain **physical newline characters** between bullet items.
+Git does not convert the literal text `\n` into a line break. Never pass
+`\n` as part of a `git commit -m` value: it is recorded verbatim, including on
+Windows. In PowerShell, a backtick escape inside a single-quoted string is also
+recorded verbatim.
+
+Use one `-m` argument per bullet for a shell-independent command. Git inserts
+the needed paragraph breaks between the arguments:
+
+```
+git commit -m "chore(scope): describe the change" -m "- add the first change" -m "- add the second change"
+```
+
+When a contiguous bullet list is needed in PowerShell, use a double-quoted
+here-string so the body contains actual newlines:
+
+```powershell
+$commitBody = @"
+- add the first change
+- add the second change
+"@
+git commit -m "chore(scope): describe the change" -m $commitBody
+```
+
+After every commit that has a body, inspect it before continuing:
+
+```powershell
+$commitMessage = git show -s --format=%B HEAD
+if ($commitMessage -match '\\n') { throw "Commit body contains a literal \\n sequence" }
+git show -s --format=fuller HEAD
+```
+
 ### Footer
 The `footer` should contain any information about **Breaking Changes** and is also the place to **reference Issues** that this commit refers to.
 - Is an **optional** part of the format
