@@ -98,6 +98,30 @@ if ($commitMessage -match '\\n') { throw "Commit body contains a literal \\n seq
 git show -s --format=fuller HEAD
 ```
 
+On Bash (Linux) and Zsh (macOS), use a quoted here-document when a single
+`-m` argument must contain a contiguous bullet list. Quoting `EOF` prevents
+variable, command, and backslash expansion:
+
+```sh
+git commit -m "chore(scope): describe the change" -m "$(cat <<'EOF'
+- add the first change
+- add the second change
+EOF
+)"
+```
+
+The preceding inspection command is PowerShell syntax. In Bash and Zsh, run
+this portable check instead:
+
+```sh
+commit_message="$(git show -s --format=%B HEAD)"
+if printf '%s' "$commit_message" | grep -Fq '\n'; then
+  printf '%s\n' 'Commit body contains a literal \n sequence' >&2
+  exit 1
+fi
+git show -s --format=fuller HEAD
+```
+
 ### Footer
 The `footer` should contain any information about **Breaking Changes** and is also the place to **reference Issues** that this commit refers to.
 - Is an **optional** part of the format
