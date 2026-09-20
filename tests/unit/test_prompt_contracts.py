@@ -7,6 +7,8 @@ import subprocess
 from argparse import Namespace
 from pathlib import Path
 
+import pytest
+
 from repo.cli.commands import existing as existing_command
 from repo.cli.commands import new as new_command
 from repo.cli.commands import ssh as ssh_command
@@ -385,3 +387,20 @@ def test_run_started_org_prompt_flow_matches_contract(monkeypatch, tmp_path: Pat
 
     expected = expand_prompts(contracts["run_started_org_interactive"])
     assert recorder.prompts == expected
+
+
+@pytest.mark.parametrize("command", [new_command, started_command])
+def test_select_org_reprompts_after_invalid_selection(monkeypatch, capsys, command) -> None:
+    """Organization selection should not end the workflow after invalid input."""
+    recorder = InputRecorder(["aiesites", "2"])
+    monkeypatch.setattr("builtins.input", recorder)
+    monkeypatch.setattr(command, "list_authenticated_orgs", lambda _api: ["acme", "aiesites"])
+
+    selected_org = command.select_org(object())
+
+    assert selected_org == "aiesites"
+    assert recorder.prompts == [
+        "Select the organization by number: ",
+        "Select the organization by number: ",
+    ]
+    assert "Invalid selection. Choose an organization from the list" in capsys.readouterr().out

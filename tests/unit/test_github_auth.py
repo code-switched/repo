@@ -115,7 +115,7 @@ def test_auth_helper_switches_before_login(monkeypatch) -> None:
     assert list(switch_cmd) in fake.calls
 
 
-def test_auth_helper_logs_in_when_no_active_user(monkeypatch) -> None:
+def test_auth_helper_logs_in_when_no_active_user(monkeypatch, capsys) -> None:
     """Should invoke login when no active account can be resolved."""
     login_cmd = (
         "gh",
@@ -152,6 +152,7 @@ def test_auth_helper_logs_in_when_no_active_user(monkeypatch) -> None:
     resolved = github.ensure_github_auth_for_user("chrischcodes")
     assert resolved == "chrischcodes"
     assert list(auth_login_cmd) in fake.calls
+    assert "https://github.com/login/device" in capsys.readouterr().out
 
 
 def test_auth_helper_falls_back_to_login_when_switch_does_not_match(monkeypatch) -> None:

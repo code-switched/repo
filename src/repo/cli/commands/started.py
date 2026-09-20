@@ -8,6 +8,7 @@ import logging
 import subprocess
 from pathlib import Path
 from dataclasses import dataclass
+from itertools import count
 
 from ..console import ansi
 from ...core.exceptions import CommandError
@@ -457,12 +458,15 @@ def select_org(api) -> str:
     for index, org_name in enumerate(org_names, start=1):
         print(f"{ansi.yellow}{index}.{ansi.reset} {org_name}")
 
-    selection = input("Select the organization by number: ").strip()
-    if not selection.isdigit():
-        raise CommandError("Invalid selection. Choose an organization from the list")
+    for _ in count():
+        selection = input("Select the organization by number: ").strip()
+        if not selection.isdigit():
+            print("Invalid selection. Choose an organization from the list")
+            continue
 
-    numeric_index = int(selection)
-    if numeric_index < 1 or numeric_index > len(org_names):
-        raise CommandError("Invalid selection. Choose an organization from the list")
+        numeric_index = int(selection)
+        if numeric_index < 1 or numeric_index > len(org_names):
+            print("Invalid selection. Choose an organization from the list")
+            continue
 
-    return org_names[numeric_index - 1]
+        return org_names[numeric_index - 1]

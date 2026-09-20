@@ -5,6 +5,8 @@ from __future__ import annotations
 import argparse
 import logging
 import subprocess
+import time
+from itertools import count
 from pathlib import Path
 from dataclasses import dataclass
 
@@ -29,10 +31,12 @@ from ._shared import (
     prompt_required,
     prompt_ssh_key,
     prompt_with_default,
-    run_git_with_propagation_retries,
 )
 
 logger = logging.getLogger("repo.cli.commands.new")
+
+_CLONE_RETRY_ATTEMPTS = 5
+_CLONE_RETRY_DELAY_SECONDS = 1.0
 
 
 @dataclass(frozen=True)
@@ -215,10 +219,9 @@ def run_new(args: argparse.Namespace) -> None:
         )
         print(f"\n{ansi.grey}{' '.join(clone_cmd)}{ansi.reset}")
         if not args.dry_run:
-            run_git_with_propagation_retries(
+            clone_repository_with_retry(
                 clone_cmd,
                 cwd=inputs.repo_parent_folder,
-                logger=logger,
             )
 
         repo_path = inputs.repo_parent_folder / inputs.repo_name
@@ -442,12 +445,68 @@ def select_org(api) -> str:
     for index, org_name in enumerate(org_names, start=1):
         print(f"{ansi.yellow}{index}.{ansi.reset} {org_name}")
 
-    selection = input("Select the organization by number: ").strip()
-    if not selection.isdigit():
-        raise CommandError("Invalid selection. Choose an organization from the list")
+    for _ in count():
+        selection = input("Select the organization by number: ").strip()
+        if not selection.isdigit():
+            print("Invalid selection. Choose an organization from the list")
+            continue
 
-    numeric_index = int(selection)
-    if numeric_index < 1 or numeric_index > len(org_names):
-        raise CommandError("Invalid selection. Choose an organization from the list")
+        numeric_index = int(selection)
+        if numeric_index < 1 or numeric_index > len(org_names):
+            print("Invalid selection. Choose an organization from the list")
+            continue
 
-    return org_names[numeric_index - 1]
+        return org_names[numeric_index - 1]
+
+
+def clone_repository_with_retry(clone_cmd: list[str], *, cwd: Path) -> None:
+    """Run git clone and retry brief propagation races for freshly created repos."""
+    completed = run_clone_once(clone_cmd, cwd=cwd)
+    if completed.returncode == 0:
+        return
+
+    if not is_repository_not_found(completed.stderr):
+        raise to_called_process_error(completed, clone_cmd)
+
+    for attempt_index in range(1, _CLONE_RETRY_ATTEMPTS + 1):
+        print(
+            f"{ansi.yellow}Repository is still provisioning on GitHub, "
+            f"retrying clone ({attempt_index}/{_CLONE_RETRY_ATTEMPTS})...{ansi.reset}"
+        )
+        time.sleep(_CLONE_RETRY_DELAY_SECONDS)
+        completed = run_clone_once(clone_cmd, cwd=cwd)
+        if completed.returncode == 0:
+            return
+        if not is_repository_not_found(completed.stderr):
+            raise to_called_process_error(completed, clone_cmd)
+
+    raise to_called_process_error(completed, clone_cmd)
+
+
+def run_clone_once(clone_cmd: list[str], *, cwd: Path) -> subprocess.CompletedProcess[str]:
+    """Run a single clone attempt without raising on non-zero exit codes."""
+    return subprocess.run(
+        clone_cmd,
+        cwd=cwd,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+
+def is_repository_not_found(stderr: str) -> bool:
+    """Return whether stderr indicates repository visibility/propagation lag."""
+    return "repository not found" in stderr.casefold()
+
+
+def to_called_process_error(
+    completed: subprocess.CompletedProcess[str],
+    command: list[str],
+) -> subprocess.CalledProcessError:
+    """Convert completed process output into CalledProcessError for consistent handling."""
+    return subprocess.CalledProcessError(
+        returncode=completed.returncode,
+        cmd=command,
+        output=completed.stdout,
+        stderr=completed.stderr,
+    )
